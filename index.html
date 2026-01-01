@@ -15,7 +15,7 @@
     overflow: hidden;
   }
 
-  /* ANIMATED WATER BOTTLE WITH CHARACTER - FIXED */
+  /* ANIMATED WATER BOTTLE WITH CHARACTER - CAP REMOVED */
   .bottle-container {
     position: absolute;
     width: 300px;
@@ -44,7 +44,7 @@
     position: absolute;
     bottom: 0;
     width: 200px;
-    height: 320px;
+    height: 380px; /* Higher water level since no cap */
     background: linear-gradient(180deg, #81d4fa, #029be5);
     border-radius: 60px 60px 50px 50px;
     animation: wave 7s ease-in-out infinite;
@@ -52,10 +52,11 @@
   }
 
   @keyframes wave {
-    0%, 100% { height: 320px; }
-    50% { height: 340px; }
+    0%, 100% { height: 380px; }
+    50% { height: 400px; }
   }
 
+  /* Open neck - no cap */
   .bottle::before {
     content: "";
     position: absolute;
@@ -68,27 +69,7 @@
     border-radius: 25px 25px 15px 15px;
   }
 
-  .cap {
-    position: absolute;
-    top: -80px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70px;
-    height: 30px;
-    background: #ff5722;
-    border-radius: 15px 15px 0 0;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-  }
-
-  .cap::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 6px;
-    background: #ef5350;
-  }
+  /* REMOVED THE CAP COMPLETELY */
 
   .eyes {
     position: absolute;
@@ -247,7 +228,7 @@
     </div>
     <div class="mouth"></div>
   </div>
-  <div class="cap"></div>
+  <!-- CAP REMOVED -->
 </div>
 
 <div class="card">
@@ -278,7 +259,7 @@
   <div class="footer">
     Simulation based on scientific studies of biochar filtration efficiency.<br>
     Different water sources have different contaminant types → different removal rates.<br>
-    Cute bottle character by SENIMSU Water AI 🌊
+    Cute open bottle character by SENIMSU Water AI 🌊
   </div>
 </div>
 
@@ -286,11 +267,9 @@
 let currentSource = '';
 
 function selectSource(source, button) {
-  // Update active button
   document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
   button.classList.add('active');
 
-  // Update display
   const names = {
     clean_snow: "Clean Snow",
     urban_snow: "Urban Snow",
@@ -300,7 +279,6 @@ function selectSource(source, button) {
   document.getElementById('selected').textContent = names[source];
   currentSource = source;
 
-  // Optional: auto-focus input
   document.getElementById('before').focus();
 }
 
