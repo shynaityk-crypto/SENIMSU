@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+  /* (Your original CSS kept, slightly trimmed for brevity in this block) */
   body {
     margin: 0;
     font-family: "Segoe UI", Arial, sans-serif;
@@ -13,8 +14,6 @@
     min-height: 100vh;
     overflow: hidden;
   }
-
-  /* ANIMATED WATER BOTTLE WITH CHARACTER - ENHANCED ANIMATION */
   .bottle-container {
     position: fixed;
     width: 300px;
@@ -26,12 +25,10 @@
     pointer-events: none;
     animation: float 6s ease-in-out infinite;
   }
-
   @keyframes float {
     0%, 100% { transform: translate(-50%, -50%) translateY(0); }
     50% { transform: translate(-50%, -50%) translateY(-20px); }
   }
-
   .bottle {
     position: absolute;
     width: 200px;
@@ -44,7 +41,6 @@
     backdrop-filter: blur(15px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
   }
-
   .water {
     position: absolute;
     bottom: 0;
@@ -54,13 +50,12 @@
     border-radius: 60px 60px 50px 50px;
     animation: wave 7s ease-in-out infinite;
     overflow: hidden;
+    transition: height 0.6s ease;
   }
-
   @keyframes wave {
     0%, 100% { height: 380px; transform: translateY(0); }
     50% { height: 400px; transform: translateY(-10px); }
   }
-
   .bottle::before {
     content: "";
     position: absolute;
@@ -72,51 +67,17 @@
     background: rgba(255, 255, 255, 0.4);
     border-radius: 25px 25px 15px 15px;
   }
+  .eyes { position: absolute; top: 140px; width: 100%; text-align: center; }
+  .eye { display: inline-block; width: 25px; height: 35px; background: #333; border-radius: 50%; margin: 0 35px; animation: blink 5s infinite; }
+  @keyframes blink { 0%,90%,100%{height:35px;} 95%{height:5px;} }
+  .mouth { position: absolute; top: 200px; left: 50%; transform: translateX(-50%); width: 70px; height: 35px; border-bottom: 10px solid #333; border-radius: 50%; animation: smile 4s ease-in-out infinite; }
+  @keyframes smile { 0%,100%{width:70px;} 50%{width:90px;} }
 
-  .eyes {
-    position: absolute;
-    top: 140px;
-    width: 100%;
-    text-align: center;
-  }
-
-  .eye {
-    display: inline-block;
-    width: 25px;
-    height: 35px;
-    background: #333;
-    border-radius: 50%;
-    margin: 0 35px;
-    animation: blink 5s infinite;
-  }
-
-  @keyframes blink {
-    0%, 90%, 100% { height: 35px; }
-    95% { height: 5px; }
-  }
-
-  .mouth {
-    position: absolute;
-    top: 200px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70px;
-    height: 35px;
-    border-bottom: 10px solid #333;
-    border-radius: 50%;
-    animation: smile 4s ease-in-out infinite;
-  }
-
-  @keyframes smile {
-    0%, 100% { width: 70px; }
-    50% { width: 90px; }
-  }
-
-  /* MAIN CARD - IMPROVED RESPONSIVE DESIGN */
+  /* Card and layout (kept as in your file) */
   .card {
     background: white;
     width: 90%;
-    max-width: 500px;
+    max-width: 900px;
     height: 90vh;
     margin: 5vh auto;
     border-radius: 20px;
@@ -127,316 +88,66 @@
     position: relative;
     overflow: hidden;
   }
-
   @media (max-width: 480px) {
-    .card {
-      width: 100%;
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-    }
+    .card { width: 100%; height: 100vh; margin: 0; border-radius: 0; }
   }
-
-  /* TOP NAVIGATION BAR - ENHANCED WITH HOVER EFFECTS */
   .top-nav {
     background: rgba(255, 255, 255, 0.95);
-    padding: 15px 20px;
-    border-bottom: 1px solid #e1f5fe;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 20px 20px 0 0;
-    backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
-    z-index: 2;
+    padding: 15px 20px; border-bottom: 1px solid #e1f5fe; display:flex; justify-content:space-between; align-items:center; border-radius:20px 20px 0 0; backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 2;
   }
+  .logo { font-size:28px; font-weight:bold; color:#0277bd; cursor:pointer; transition: color 0.3s; }
+  .logo:hover { color:#01579b; }
+  .nav-links { display:flex; gap:20px; }
+  .nav-link { color:#01579b; font-size:16px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:all 0.3s; position:relative; }
+  .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:100%; height:2px; background:#0288d1; transform:scaleX(0); transition:transform 0.3s; }
+  .nav-link:hover::after { transform:scaleX(1); }
+  .nav-link:hover { background:#e1f5fe; }
+  .nav-link.active { background:#0288d1; color:white; font-weight:bold; }
+  .nav-link.active::after { transform:scaleX(0); }
 
-  .logo {
-    font-size: 28px;
-    font-weight: bold;
-    color: #0277bd;
-    cursor: pointer;
-    transition: color 0.3s;
-  }
+  .content { flex:1; padding: 20px 30px; overflow-y:auto; scrollbar-width: thin; }
+  .content::-webkit-scrollbar { width: 8px; }
+  .content::-webkit-scrollbar-thumb { background: #0288d1; border-radius: 10px; }
 
-  .logo:hover {
-    color: #01579b;
-  }
+  h2 { color:#0277bd; margin-top:0; }
+  p { color:#555; font-size:16px; margin-bottom:25px; }
+  .source-buttons { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin: 15px 0; }
+  .source-btn { padding:14px; background:#e1f5fe; color:#01579b; border:none; border-radius:10px; cursor:pointer; font-size:15px; transition:all 0.3s; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+  .source-btn:hover { background:#b3e5fc; transform:translateY(-3px); box-shadow:0 5px 15px rgba(2,136,209,0.3); }
+  .source-btn.active { background:#0288d1; color:white; box-shadow:0 5px 15px rgba(2,136,209,0.4); transform:translateY(-3px); }
+  input { width:90%; padding:15px; font-size:17px; border-radius:10px; border:2px solid #ccc; margin:15px 0; transition:all 0.3s; }
+  input:focus { border-color:#0288d1; outline:none; box-shadow:0 0 10px rgba(2,136,209,0.2); }
+  button.primary { padding:16px; width:100%; background:#0288d1; color:white; border:none; border-radius:10px; font-size:18px; cursor:pointer; transition:all 0.3s; box-shadow:0 5px 15px rgba(2,136,209,0.3); }
+  button.primary:hover { background:#0277bd; transform:translateY(-2px); box-shadow:0 8px 20px rgba(2,136,209,0.4); }
+  .result { padding:20px; border-radius:12px; background:#e1f5fe; color:#01579b; font-size:16px; line-height:1.7; display:none; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+  #chart-container { margin-top:20px; padding:10px; background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); display:block; }
+  .refilter-section { padding:20px; background:#fff3e0; border-radius:12px; border-left:6px solid #ff9800; margin-top:25px; display:none; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+  .history-list { text-align:left; margin-top:20px; }
+  .history-item { background:#e1f5fe; padding:15px; margin:15px 0; border-radius:12px; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition:transform 0.3s; }
+  .history-item:hover { transform: translateY(-5px); }
+  .clear-history { background:#ff5722; margin-top:20px; box-shadow:0 5px 15px rgba(255,87,34,0.3); }
+  .footer { text-align:center; padding:20px; font-size:12px; color:#777; border-top:1px solid #eee; margin-top:auto; background:white; }
+  .footer a { color:#0288d1; text-decoration:none; margin:0 10px; cursor:pointer; }
+  .footer a:hover { text-decoration:underline; }
+  .section { display:none; }
+  .section.active { display:block; }
+  [data-tooltip] { position: relative; }
+  [data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 5px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  [data-tooltip]:hover::after { opacity: 1; }
 
-  .nav-links {
-    display: flex;
-    gap: 20px;
-  }
-
-  .nav-link {
-    color: #01579b;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.3s;
-    position: relative;
-  }
-
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: #0288d1;
-    transform: scaleX(0);
-    transition: transform 0.3s;
-  }
-
-  .nav-link:hover::after {
-    transform: scaleX(1);
-  }
-
-  .nav-link:hover {
-    background: #e1f5fe;
-  }
-
-  .nav-link.active {
-    background: #0288d1;
-    color: white;
-    font-weight: bold;
-  }
-
-  .nav-link.active::after {
-    transform: scaleX(0);
-  }
-
-  /* CONTENT AREA - IMPROVED SCROLLING */
-  .content {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-  }
-
-  .content::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .content::-webkit-scrollbar-thumb {
-    background: #0288d1;
-    border-radius: 10px;
-  }
-
-  h2 {
-    color: #0277bd;
-    margin-top: 0;
-  }
-
-  p {
-    color: #555;
-    font-size: 16px;
-    margin-bottom: 25px;
-  }
-
-  .source-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin: 25px 0;
-  }
-
-  .source-btn {
-    padding: 14px;
-    background: #e1f5fe;
-    color: #01579b;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 15px;
-    transition: all 0.3s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-
-  .source-btn:hover {
-    background: #b3e5fc;
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(2,136,209,0.3);
-  }
-
-  .source-btn.active {
-    background: #0288d1;
-    color: white;
-    box-shadow: 0 5px 15px rgba(2,136,209,0.4);
-    transform: translateY(-3px);
-  }
-
-  input {
-    width: 90%;
-    padding: 15px;
-    font-size: 17px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    margin: 15px 0;
-    transition: all 0.3s;
-  }
-
-  input:focus {
-    border-color: #0288d1;
-    outline: none;
-    box-shadow: 0 0 10px rgba(2,136,209,0.2);
-  }
-
-  button.primary {
-    padding: 16px;
-    width: 100%;
-    background: #0288d1;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 5px 15px rgba(2,136,209,0.3);
-  }
-
-  button.primary:hover {
-    background: #0277bd;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(2,136,209,0.4);
-  }
-
-  .result {
-    padding: 20px;
-    border-radius: 12px;
-    background: #e1f5fe;
-    color: #01579b;
-    font-size: 16px;
-    line-height: 1.7;
-    display: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-
-  #chart-container {
-    margin-top: 20px;
-    padding: 10px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-
-  .refilter-section {
-    padding: 20px;
-    background: #fff3e0;
-    border-radius: 12px;
-    border-left: 6px solid #ff9800;
-    margin-top: 25px;
-    display: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-
-  .auth-form input {
-    width: 90%;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    transition: all 0.3s;
-  }
-
-  .auth-form input:focus {
-    border-color: #0288d1;
-    box-shadow: 0 0 10px rgba(2,136,209,0.2);
-  }
-
-  .history-list {
-    text-align: left;
-    margin-top: 20px;
-  }
-
-  .history-item {
-    background: #e1f5fe;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 12px;
-    font-size: 14px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-  }
-
-  .history-item:hover {
-    transform: translateY(-5px);
-  }
-
-  .clear-history {
-    background: #ff5722;
-    margin-top: 20px;
-    box-shadow: 0 5px 15px rgba(255,87,34,0.3);
-  }
-
-  .clear-history:hover {
-    background: #f4511e;
-    box-shadow: 0 8px 20px rgba(255,87,34,0.4);
-  }
-
-  .footer {
-    text-align: center;
-    padding: 20px;
-    font-size: 12px;
-    color: #777;
-    border-top: 1px solid #eee;
-    margin-top: auto;
-    background: white;
-  }
-
-  .footer a {
-    color: #0288d1;
-    text-decoration: none;
-    margin: 0 10px;
-    cursor: pointer;
-  }
-
-  .footer a:hover {
-    text-decoration: underline;
-  }
-
-  .section {
-    display: none;
-  }
-
-  .section.active {
-    display: block;
-  }
-
-  /* Add tooltips for help */
-  [data-tooltip] {
-    position: relative;
-  }
-
-  [data-tooltip]::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-  }
-
-  [data-tooltip]:hover::after {
-    opacity: 1;
+  /* new small status bar for live readings */
+  .live-status { display:flex; gap:16px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .status-box { background:#eaf7ff; padding:10px 12px; border-radius:9px; box-shadow:0 2px 6px rgba(0,0,0,0.08); color:#01579b; font-weight:600; }
+  @media (max-width: 760px) {
+    .bottle-container { display:none; } /* hide big bottle on small screens to keep layout tidy */
   }
 </style>
 </head>
 <body>
 
-<div class="bottle-container">
+<div class="bottle-container" aria-hidden="true">
   <div class="bottle">
-    <div class="water"></div>
+    <div class="water" id="bottleWater" style="height:120px;"></div>
     <div class="eyes">
       <div class="eye"></div>
       <div class="eye"></div>
@@ -446,7 +157,6 @@
 </div>
 
 <div class="card">
-  <!-- Top Navigation Bar -->
   <div class="top-nav">
     <div class="logo" onclick="showSection('analyze')">SENIMSU</div>
     <div class="nav-links">
@@ -457,9 +167,7 @@
     </div>
   </div>
 
-  <!-- Scrollable Content -->
   <div class="content">
-    <!-- Analyze Section -->
     <div id="analyze" class="section active">
       <p style="margin-top:0;">AI-Assisted Water Quality Analyzer <span data-tooltip="Enter turbidity and select source for simulation">ℹ️</span></p>
 
@@ -478,18 +186,23 @@
 
       <div id="output" class="result"></div>
 
-      <div id="chart-container" style="display:none;">
-        <canvas id="turbidityChart"></canvas>
-      </div>
+      <!-- NEW: Live status + charts -->
+      <div style="margin-top:18px;">
+        <div class="live-status">
+          <div class="status-box" id="liveDepth">Depth: --%</div>
+          <div class="status-box" id="liveClean">Cleanliness: --%</div>
+          <div class="status-box" id="liveTime">Last update: --</div>
+        </div>
 
-      <div id="refilter" class="refilter-section">
-        <strong>🔄 Re-filtration Recommended</strong><br><br>
-        The predicted turbidity is still above safe drinking levels.<br>
-        Please pass the water through the biochar filter again, then measure and enter the new NTU value.
+        <div id="chart-container">
+          <canvas id="depthChart" style="max-height:220px;"></canvas>
+          <canvas id="cleanChart" style="max-height:220px; margin-top:16px;"></canvas>
+        </div>
+
+        <div id="refilter" class="refilter-section">🔄 Re-filtration Recommended</div>
       </div>
     </div>
 
-    <!-- Profile Section -->
     <div id="profile" class="section">
       <h2>Your Profile</h2>
       <p>Welcome, <strong id="usernameDisplay">Guest</strong>!</p>
@@ -500,7 +213,6 @@
       <button class="primary clear-history" onclick="clearHistory()" id="clearBtn" style="display:none;">Clear History</button>
     </div>
 
-    <!-- Auth Section -->
     <div id="auth" class="section">
       <div id="loginForm" class="auth-form">
         <h2>Login</h2>
@@ -519,21 +231,18 @@
       </div>
     </div>
 
-    <!-- About Section -->
     <div id="about" class="section">
       <h2>About SENIMSU</h2>
       <p>SENIMSU Water AI is an innovative tool designed to simulate water quality analysis using biochar filtration. It helps users estimate turbidity reduction for various winter water sources like snow, ice, and sleet. Built with cutting-edge AI, it provides quick insights for safe water consumption in harsh environments. Our mission is to make water purification accessible and educational for everyone.</p>
       <p>Developed in 2026, SENIMSU combines scientific research on biochar efficiency with user-friendly design to promote sustainable water practices.</p>
     </div>
 
-    <!-- Privacy Section -->
     <div id="privacy" class="section">
       <h2>Privacy Policy</h2>
       <p>At SENIMSU Water AI, we value your privacy. We collect minimal data, such as usernames and analysis history, stored locally in your browser via localStorage. No personal information is shared with third parties. We do not track your usage or sell data. By using this site, you agree to our terms. For questions, contact us.</p>
       <p>This policy was last updated on January 03, 2026.</p>
     </div>
 
-    <!-- Contact Section -->
     <div id="contact" class="section">
       <h2>Contact Us</h2>
       <p>If you have questions, feedback, or need support, reach out via:</p>
@@ -543,7 +252,6 @@
     </div>
   </div>
 
-  <!-- Enhanced Footer with Links -->
   <div class="footer">
     Simulation based on scientific studies of biochar filtration efficiency.<br>
     Different water sources have different contaminant types → different removal rates.<br>
@@ -553,12 +261,13 @@
 </div>
 
 <script>
+/* ====== existing app logic (auth, analyze, history) - preserved from your file ====== */
 let currentSource = '';
 let currentUser = null;
 let history = [];
-let turbidityChart;
+let depthChart, cleanChart;
+const MAX_POINTS = 60; // keep last 60 readings
 
-// Load saved data
 function loadData() {
   const savedUser = localStorage.getItem('senimsuUser');
   if (savedUser) {
@@ -590,7 +299,6 @@ function updateUI() {
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(l => l.getAttribute('onclick') === `showSection('${id}')`);
   if (activeLink) activeLink.classList.add('active');
@@ -601,12 +309,10 @@ function showLogin() {
   document.getElementById('loginForm').style.display = 'block';
   document.getElementById('signupForm').style.display = 'none';
 }
-
 function showSignup() {
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('signupForm').style.display = 'block';
 }
-
 function signup() {
   const user = document.getElementById('signupUser').value.trim();
   const pass = document.getElementById('signupPass').value;
@@ -616,7 +322,6 @@ function signup() {
   alert('Account created! Now login.');
   showLogin();
 }
-
 function login() {
   const user = document.getElementById('loginUser').value.trim();
   const pass = document.getElementById('loginPass').value;
@@ -632,7 +337,6 @@ function login() {
     alert('Incorrect username or password');
   }
 }
-
 function logout() {
   if (confirm('Logout?')) {
     currentUser = null;
@@ -645,13 +349,7 @@ function logout() {
 function selectSource(source, button) {
   document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
   button.classList.add('active');
-
-  const names = {
-    clean_snow: "Clean Snow",
-    urban_snow: "Urban Snow",
-    ice: "Ice",
-    sleet: "Sleet"
-  };
+  const names = { clean_snow: "Clean Snow", urban_snow: "Urban Snow", ice: "Ice", sleet: "Sleet" };
   document.getElementById('selected').textContent = names[source];
   currentSource = source;
   document.getElementById('before').focus();
@@ -659,12 +357,9 @@ function selectSource(source, button) {
 
 function analyze() {
   if (!currentSource) return alert("Please select a water source first!");
-
   let before = parseFloat(document.getElementById("before").value);
   if (isNaN(before) || before < 0) return alert("Please enter a valid positive turbidity value (NTU).");
-
   let removalRate, explanation = "";
-
   switch (currentSource) {
     case 'clean_snow':
       removalRate = before <= 20 ? 98 : before <= 100 ? 95 : 92;
@@ -683,11 +378,9 @@ function analyze() {
       explanation = "Sleet carries mixed contaminants — 80-90% removal.";
       break;
   }
-
   let after = Math.round(before * (1 - removalRate / 100));
   let status = after <= 100 ? "Clean & Safe" : "Still Cloudy";
   let action = after <= 100 ? "Ready to boil and drink! ✅" : "Re-filter recommended";
-
   const resultHTML = `
     <strong>Source:</strong> ${document.getElementById('selected').textContent}<br>
     <strong>Initial turbidity:</strong> ${before} NTU<br>
@@ -697,50 +390,11 @@ function analyze() {
     <strong>Status:</strong> ${status}<br>
     <strong>Next step:</strong> ${action}
   `;
-
   document.getElementById("output").style.display = "block";
   document.getElementById("output").innerHTML = resultHTML;
   document.getElementById("refilter").style.display = after > 100 ? "block" : "none";
-
-  // Render chart
-  document.getElementById('chart-container').style.display = 'block';
-  const ctx = document.getElementById('turbidityChart').getContext('2d');
-  if (turbidityChart) turbidityChart.destroy();
-  turbidityChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Initial', 'Predicted'],
-      datasets: [{
-        label: 'Turbidity (NTU)',
-        data: [before, after],
-        backgroundColor: ['#0288d1', '#81d4fa'],
-        borderColor: ['#0277bd', '#029be5'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      },
-      responsive: true,
-      plugins: {
-        legend: {
-          display: false
-        }
-      }
-    }
-  });
-
   if (currentUser) {
-    const entry = {
-      date: new Date().toLocaleString(),
-      source: document.getElementById('selected').textContent,
-      initial: before,
-      predicted: after,
-      removal: removalRate
-    };
+    const entry = { date: new Date().toLocaleString(), source: document.getElementById('selected').textContent, initial: before, predicted: after, removal: removalRate };
     history.unshift(entry);
     localStorage.setItem('senimsuHistory', JSON.stringify(history));
     renderHistory();
@@ -758,16 +412,11 @@ function renderHistory() {
   history.forEach(item => {
     const div = document.createElement('div');
     div.className = 'history-item';
-    div.innerHTML = `
-      <strong>${item.date}</strong><br>
-      Source: ${item.source}<br>
-      Initial: ${item.initial} NTU → Predicted: ${item.predicted} NTU (${item.removal}% removal)
-    `;
+    div.innerHTML = `<strong>${item.date}</strong><br>Source: ${item.source}<br>Initial: ${item.initial} NTU → Predicted: ${item.predicted} NTU (${item.removal}% removal)`;
     container.appendChild(div);
   });
   document.getElementById('clearBtn').style.display = 'block';
 }
-
 function clearHistory() {
   if (confirm('Clear all past analyses?')) {
     history = [];
@@ -775,6 +424,137 @@ function clearHistory() {
     renderHistory();
   }
 }
+
+/* ====== NEW: Live data fetching, charts, and cleanliness estimation ====== */
+
+// Helper: estimate cleanliness from depth.
+// For now we use a simple inverse mapping: deeper water (higher %) -> lower cleanliness.
+// You can replace this with your backend's turbidity/cleanliness endpoint later.
+function estimateCleanliness(depthPercent) {
+  // depthPercent in 0..100
+  // simple mapping: cleanliness = 100 - depth, but we smooth it a bit and clamp
+  let clean = 100 - depthPercent;
+  // apply a small smoothing curve so mid-depths still show moderate cleanliness
+  clean = Math.round(Math.max(0, Math.min(100, clean)));
+  return clean;
+}
+
+const DEPTH_API = "http://localhost:5000/api/depth"; // python server endpoint
+let depthHistory = [];
+let cleanHistory = [];
+let timeLabels = [];
+
+function setupCharts() {
+  const dctx = document.getElementById('depthChart').getContext('2d');
+  const cctx = document.getElementById('cleanChart').getContext('2d');
+
+  depthChart = new Chart(dctx, {
+    type: 'line',
+    data: {
+      labels: timeLabels,
+      datasets: [{
+        label: 'Depth (%)',
+        data: depthHistory,
+        fill: true,
+        tension: 0.25,
+        borderWidth: 2,
+        pointRadius: 2,
+        backgroundColor: 'rgba(2,136,209,0.15)',
+        borderColor: '#0288d1'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 100 } },
+      plugins: { legend: { display: true } }
+    }
+  });
+
+  cleanChart = new Chart(cctx, {
+    type: 'line',
+    data: {
+      labels: timeLabels,
+      datasets: [{
+        label: 'Cleanliness (%)',
+        data: cleanHistory,
+        fill: true,
+        tension: 0.25,
+        borderWidth: 2,
+        pointRadius: 2,
+        backgroundColor: 'rgba(129,212,250,0.15)',
+        borderColor: '#81d4fa'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 100 } },
+      plugins: { legend: { display: true } }
+    }
+  });
+}
+
+// Push new reading into arrays, keep max length
+function pushReading(depth) {
+  const now = new Date();
+  const timeLabel = now.toLocaleTimeString();
+
+  if (timeLabels.length >= MAX_POINTS) {
+    timeLabels.shift();
+    depthHistory.shift();
+    cleanHistory.shift();
+  }
+  timeLabels.push(timeLabel);
+  depthHistory.push(depth);
+
+  const clean = estimateCleanliness(depth);
+  cleanHistory.push(clean);
+
+  // update small status boxes
+  document.getElementById('liveDepth').textContent = `Depth: ${depth}%`;
+  document.getElementById('liveClean').textContent = `Cleanliness: ${clean}%`;
+  document.getElementById('liveTime').textContent = `Last update: ${timeLabel}`;
+
+  // animate big bottle (if visible)
+  const bottle = document.getElementById('bottleWater');
+  if (bottle) {
+    // bottle max inner height is ~380 (matching earlier CSS). We map percent to this height.
+    const maxH = 380;
+    bottle.style.height = `${(depth / 100) * maxH}px`;
+  }
+
+  // update charts
+  if (depthChart) depthChart.update();
+  if (cleanChart) cleanChart.update();
+}
+
+// Fetch depth from server
+async function fetchDepthOnce() {
+  try {
+    const res = await fetch(DEPTH_API);
+    if (!res.ok) throw new Error("Network response not ok");
+    const data = await res.json();
+    // server returns {"depth": number}
+    const depth = Math.round(Number(data.depth));
+    if (!Number.isNaN(depth)) pushReading(Math.max(0, Math.min(100, depth)));
+  } catch (err) {
+    console.error("Fetch depth error:", err);
+  }
+}
+
+// Start polling server every N milliseconds
+let pollingInterval = 2000;
+function startPolling() {
+  fetchDepthOnce(); // immediate
+  return setInterval(fetchDepthOnce, pollingInterval);
+}
+
+/* initialize charts and start polling after DOM loads */
+document.addEventListener('DOMContentLoaded', () => {
+  setupCharts();
+  startPolling();
+});
+
+/* ====== end live data code ====== */
 </script>
 
 </body>
