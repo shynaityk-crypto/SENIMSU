@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SENIMSU Water AI</title>
-
-<!-- Chart.js CDN (safe usage with fallback handling in script) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<title>SENIMSU Water AI - Professional Edition</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU0VOSU1TVSBXYXRlciBBSSIsInNob3J0X25hbWUiOiJTRU5JTVNVIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNiM2U1ZmMiLCJ0aGVtZV9jb2xvciI6IiMwMjg4ZDEifQ==">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
   :root{
@@ -16,17 +15,32 @@
     --accent:#0288d1;
     --muted:#e1f5fe;
     --danger:#ff9800;
+    --success:#4caf50;
+    --warning:#ff9800;
+    --text:#062030;
+    --text-light:#324;
     --max-bottle-width:220px;
     --bottle-height:500px;
     --ui-radius:12px;
   }
 
-  /* Reduced motion respect */
+  [data-theme="dark"]{
+    --bg-1:#1a237e;
+    --bg-2:#0d47a1;
+    --card-bg:#1e1e1e;
+    --accent:#42a5f5;
+    --muted:#263238;
+    --text:#e0e0e0;
+    --text-light:#b0bec5;
+  }
+
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important; transition-duration:.001ms !important}
   }
 
-  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;overflow:hidden;color:#062030}
+  *{box-sizing:border-box}
+
+  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;overflow:hidden;color:var(--text);transition:background 0.3s, color 0.3s}
 
   .app{
     min-height:100vh;
@@ -34,13 +48,12 @@
     align-items:center;
     justify-content:center;
     padding:2vh;
-    box-sizing:border-box;
     gap:20px;
   }
 
   .card{
     width:100%;
-    max-width:1000px;
+    max-width:1100px;
     height:90vh;
     background:var(--card-bg);
     border-radius:20px;
@@ -50,17 +63,27 @@
     flex-direction:column;
     position:relative;
     z-index:1;
+    transition:background 0.3s;
   }
 
-  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--muted)}
-  .logo{font-size:1.35rem;font-weight:700;color:#0277bd}
+  .top-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 20px;
+    border-bottom:1px solid var(--muted);
+    transition:border-color 0.3s;
+  }
+  .logo{font-size:1.35rem;font-weight:700;color:var(--accent);transition:color 0.3s}
   .nav{display:flex;gap:8px;align-items:center}
-  .nav button{background:transparent;border:0;padding:8px 12px;border-radius:10px;color:#01579b;cursor:pointer}
+  .nav button, .icon-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;color:var(--accent);cursor:pointer;transition:all 0.2s;font-size:0.95rem}
+  .nav button:hover, .icon-btn:hover{background:rgba(2,136,209,0.1);transform:translateY(-1px)}
   .nav button[aria-pressed="true"]{background:var(--accent);color:#fff}
+  .icon-btn{padding:8px;font-size:1.2rem}
 
-  .content{display:flex;flex:1;gap:24px;padding:18px;box-sizing:border-box;overflow:hidden}
+  .content{display:flex;flex:1;gap:24px;padding:18px;overflow:hidden}
   .left, .right{background:transparent}
-  .left{flex:1;min-width:260px;max-width:460px;overflow:auto;padding-right:8px}
+  .left{flex:1;min-width:260px;max-width:480px;overflow:auto;padding-right:8px}
   .right{flex:1.3;height:100%;display:flex;flex-direction:column;align-items:stretch}
 
   .section{display:none}
@@ -73,24 +96,106 @@
     margin:12px 0 6px;
   }
   .source-btn{
-    padding:12px;border-radius:10px;border:0;background:var(--muted);cursor:pointer;font-weight:600;color:#01579b;
+    padding:12px;
+    border-radius:10px;
+    border:0;
+    background:var(--muted);
+    cursor:pointer;
+    font-weight:600;
+    color:var(--accent);
+    transition:all 0.2s;
+    position:relative;
+    overflow:hidden;
   }
-  .source-btn[aria-pressed="true"]{background:var(--accent);color:#fff}
+  .source-btn::before{
+    content:'';
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:0;
+    height:0;
+    border-radius:50%;
+    background:rgba(2,136,209,0.2);
+    transform:translate(-50%,-50%);
+    transition:width 0.3s, height 0.3s;
+  }
+  .source-btn:active::before{width:300px;height:300px}
+  .source-btn:hover{background:rgba(2,136,209,0.2);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.1)}
+  .source-btn[aria-pressed="true"]{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(2,136,209,0.4)}
 
-  label{display:block;font-weight:600;margin-top:12px}
-  input[type="number"]{
+  label{display:block;font-weight:600;margin-top:12px;color:var(--text)}
+  input[type="number"], select{
     width:100%;
-    padding:12px;border-radius:10px;border:2px solid #ddd;font-size:1rem;margin-top:8px;box-sizing:border-box;
+    padding:12px;
+    border-radius:10px;
+    border:2px solid var(--muted);
+    font-size:1rem;
+    margin-top:8px;
+    background:var(--card-bg);
+    color:var(--text);
+    transition:border-color 0.2s, box-shadow 0.2s;
   }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(2,136,209,0.1);
+  }
+  
   .primary{
-    margin-top:12px;padding:12px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer;width:100%;
+    margin-top:12px;
+    padding:12px;
+    border-radius:10px;
+    border:0;
+    background:var(--accent);
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+    transition:all 0.2s;
+    position:relative;
+    overflow:hidden;
   }
+  .primary::before{
+    content:'';
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:0;
+    height:0;
+    border-radius:50%;
+    background:rgba(255,255,255,0.2);
+    transform:translate(-50%,-50%);
+    transition:width 0.3s, height 0.3s;
+  }
+  .primary:active::before{width:300px;height:300px}
+  .primary:hover{background:#0277bd;transform:translateY(-1px);box-shadow:0 6px 16px rgba(2,136,209,0.3)}
+  .primary:active{transform:translateY(0)}
 
-  .output, .advice{margin-top:12px;padding:14px;border-radius:10px;background:var(--muted);display:none}
-  .output[aria-hidden="false"], .advice[aria-hidden="false"]{display:block}
+  .output, .advice, .forecast-panel{
+    margin-top:12px;
+    padding:14px;
+    border-radius:10px;
+    background:var(--muted);
+    display:none;
+    transition:background 0.3s;
+  }
+  .output[aria-hidden="false"], .advice[aria-hidden="false"], .forecast-panel[aria-hidden="false"]{display:block;animation:slideIn 0.3s ease}
+
+  @keyframes slideIn{
+    from{opacity:0;transform:translateY(-10px)}
+    to{opacity:1;transform:translateY(0)}
+  }
 
   .status{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
-  .status .chip{background:#eaf7ff;padding:8px;border-radius:8px;min-width:110px;text-align:center}
+  .status .chip{
+    background:var(--muted);
+    padding:8px;
+    border-radius:8px;
+    min-width:110px;
+    text-align:center;
+    transition:all 0.3s;
+    color:var(--text);
+  }
 
   .bottle-wrap{display:flex;align-items:center;justify-content:center;padding:10px 10px 0}
   .bottle-container{
@@ -120,27 +225,39 @@
     align-items:center;
   }
 
-  /* water fill uses CSS variable --fill (0..100) */
   .bottle .water{
-    position:absolute;left:0;right:0;bottom:0;
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
     height:calc(var(--fill,20) * 1%);
     background:linear-gradient(180deg,#81d4fa,#0288d1);
     border-radius:inherit;
-    transition:height .45s cubic-bezier(.2,.8,.2,1);
+    transition:height .45s cubic-bezier(.2,.8,.2,1), background 0.3s;
     will-change:height;
   }
+  .bottle .water.contaminated{background:linear-gradient(180deg,#ffb74d,#f57c00)}
+  .bottle .water.safe{background:linear-gradient(180deg,#81c784,#4caf50)}
 
   .eyes{position:relative;z-index:2;margin-top:72px;display:flex;gap:20px}
-  .eye{width:24px;height:28px;background:#2b2b2b;border-radius:50%}
-  .mouth{width:64px;height:30px;border-bottom:8px solid #333;border-radius:50%;margin-top:8px}
+  .eye{width:24px;height:28px;background:#2b2b2b;border-radius:50%;transition:transform 0.3s}
+  .bottle:hover .eye{transform:scale(1.1)}
+  .mouth{width:64px;height:30px;border-bottom:8px solid #333;border-radius:50%;margin-top:8px;transition:transform 0.3s}
 
-  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;align-items:start}
-  canvas{width:100%!important;height:180px!important}
+  .chart-container{
+    position:relative;
+    margin-top:10px;
+    padding:12px;
+    background:var(--card-bg);
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    transition:background 0.3s;
+  }
+  canvas{width:100%!important;height:200px!important}
 
-  .profile p{line-height:1.6;color:#223}
+  .profile p{line-height:1.6;color:var(--text-light);transition:color 0.3s}
 
-  /* ENHANCED: Safety indicator with icons and better styling */
-  #safetyIndicator {
+  #safetyIndicator{
     display:inline-flex;
     align-items:center;
     gap:6px;
@@ -149,19 +266,23 @@
     font-weight:700;
     font-size:0.95rem;
     transition:all 0.3s ease;
+    animation:pulse 2s infinite;
   }
-  #safetyIndicator.safe { background: #e6f7ee; color: #1b7a33; border: 2px solid #1b7a33; }
-  #safetyIndicator.caution { background: #fff8e1; color: #8a4d00; border: 2px solid #8a4d00; }
-  #safetyIndicator.unsafe { background: #ffebee; color: #c62828; border: 2px solid #c62828; }
+  @keyframes pulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.05)}
+  }
+  #safetyIndicator.safe{background:#e6f7ee;color:#1b7a33;border:2px solid #1b7a33;animation:none}
+  #safetyIndicator.caution{background:#fff8e1;color:#8a4d00;border:2px solid #8a4d00}
+  #safetyIndicator.unsafe{background:#ffebee;color:#c62828;border:2px solid #c62828}
 
-  #analysisSpinner svg { vertical-align: middle; display:inline-block; }
+  #analysisSpinner svg{vertical-align:middle;display:inline-block}
 
-  /* ADDED: Tooltip styling */
-  .tooltip-icon {
+  .tooltip-icon{
     display:inline-block;
     width:18px;
     height:18px;
-    background:#0288d1;
+    background:var(--accent);
     color:white;
     border-radius:50%;
     text-align:center;
@@ -169,52 +290,137 @@
     font-size:12px;
     cursor:help;
     margin-left:4px;
+    transition:transform 0.2s;
   }
+  .tooltip-icon:hover{transform:scale(1.2)}
 
-  /* ADDED: Treatment suggestions styling */
-  .treatment-list {
-    margin:12px 0;
-    padding:0;
-    list-style:none;
-  }
-  .treatment-item {
+  .treatment-list{margin:12px 0;padding:0;list-style:none}
+  .treatment-item{
     padding:10px;
     margin:6px 0;
-    background:#f5f5f5;
-    border-left:4px solid #0288d1;
+    background:var(--card-bg);
+    border-left:4px solid var(--accent);
     border-radius:4px;
+    transition:all 0.2s;
   }
-  .treatment-item strong {
-    color:#01579b;
-  }
+  .treatment-item:hover{transform:translateX(4px);box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+  .treatment-item strong{color:var(--accent)}
 
-  /* ADDED: Risk badges */
-  .risk-badge {
+  .risk-badge{
     display:inline-block;
     padding:4px 8px;
     border-radius:6px;
     font-size:0.85rem;
     font-weight:600;
     margin:2px;
+    transition:transform 0.2s;
   }
-  .risk-low { background:#e6f7ee; color:#1b7a33; }
-  .risk-medium { background:#fff8e1; color:#8a4d00; }
-  .risk-high { background:#ffebee; color:#c62828; }
+  .risk-badge:hover{transform:scale(1.05)}
+  .risk-low{background:#e6f7ee;color:#1b7a33}
+  .risk-medium{background:#fff8e1;color:#8a4d00}
+  .risk-high{background:#ffebee;color:#c62828}
+
+  .confidence-meter{
+    margin:12px 0;
+    height:8px;
+    background:#e0e0e0;
+    border-radius:4px;
+    overflow:hidden;
+    position:relative;
+  }
+  .confidence-fill{
+    height:100%;
+    background:linear-gradient(90deg,#4caf50,#8bc34a);
+    border-radius:4px;
+    transition:width 0.5s ease;
+  }
+  .confidence-fill.medium{background:linear-gradient(90deg,#ff9800,#ffc107)}
+  .confidence-fill.low{background:linear-gradient(90deg,#f44336,#ff5722)}
+
+  .anomaly-badge{
+    display:inline-block;
+    background:#ff5722;
+    color:white;
+    padding:4px 8px;
+    border-radius:4px;
+    font-size:0.8rem;
+    font-weight:700;
+    animation:blink 1.5s infinite;
+  }
+  @keyframes blink{
+    0%,100%{opacity:1}
+    50%{opacity:0.7}
+  }
+
+  .export-btn{
+    margin-top:8px;
+    padding:8px 16px;
+    border:0;
+    background:var(--muted);
+    color:var(--accent);
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:all 0.2s;
+  }
+  .export-btn:hover{background:var(--accent);color:white;transform:translateY(-1px)}
+
+  .toggle-group{
+    display:flex;
+    gap:8px;
+    margin:12px 0;
+    background:var(--muted);
+    padding:4px;
+    border-radius:10px;
+  }
+  .toggle-btn{
+    flex:1;
+    padding:8px;
+    border:0;
+    background:transparent;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    color:var(--text);
+    transition:all 0.2s;
+  }
+  .toggle-btn.active{background:var(--accent);color:white}
+
+  .forecast-line{
+    stroke-dasharray:5,5;
+    opacity:0.7;
+  }
 
   @media (max-width:920px){
     .content{flex-direction:column}
     .left{max-width:none}
-    .charts{grid-template-columns:1fr}
     .bottle-container{display:none}
   }
 
-  @media (max-width: 760px) {
-    #safetyIndicator { margin-top: 8px; display:inline-flex; }
-    .status { flex-direction: column; gap: 6px; }
+  @media (max-width:760px){
+    #safetyIndicator{margin-top:8px;display:inline-flex}
+    .status{flex-direction:column;gap:6px}
   }
 
-  /* SR-only */
-  .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
+  .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+
+  .advanced-inputs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+  .advanced-inputs input{margin-top:4px}
+
+  .educational-mode{
+    background:var(--muted);
+    padding:12px;
+    border-radius:10px;
+    margin-top:12px;
+    border-left:4px solid var(--accent);
+  }
+  .educational-mode h4{margin:0 0 8px 0;color:var(--accent)}
+  .educational-mode p{margin:4px 0;font-size:0.9rem;line-height:1.5}
 </style>
 </head>
 <body>
@@ -222,15 +428,19 @@
 <div class="app" role="application">
   <div class="card" aria-labelledby="appTitle">
     <header class="top-nav">
-      <div id="appTitle" class="logo">SENIMSU</div>
+      <div id="appTitle" class="logo">SENIMSU Pro</div>
       <nav class="nav" aria-label="Main navigation">
         <button type="button" data-target="analyze" aria-pressed="true">Analyze</button>
-        <button type="button" data-target="profile" aria-pressed="false">Profile</button>
+        <button type="button" data-target="advanced" aria-pressed="false">Advanced</button>
+        <button type="button" data-target="forecast" aria-pressed="false">Forecast</button>
+        <button type="button" data-target="profile" aria-pressed="false">About</button>
+        <button type="button" class="icon-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle theme">🌓</button>
       </nav>
     </header>
 
     <main class="content">
       <section class="left">
+        <!-- ANALYZE TAB -->
         <div id="analyze" class="section" aria-hidden="false">
           <h2>AI Water Quality Analyzer</h2>
 
@@ -256,10 +466,10 @@
           <input id="before" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 85.4" aria-describedby="beforeHelp">
           <div id="beforeHelp" class="sr-only">Turbidity in Nephelometric Turbidity Units (NTU)</div>
 
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="primary" id="analyzeBtn" type="button">Analyze</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
+            <button class="primary" id="analyzeBtn" type="button" style="flex:1;min-width:120px">Analyze</button>
             
-            <span id="analysisSpinner" aria-hidden="true" style="display:none;margin-left:8px" title="Analyzing">
+            <span id="analysisSpinner" aria-hidden="true" style="display:none" title="Analyzing">
               <svg width="18" height="18" viewBox="0 0 50 50" aria-hidden="true">
                 <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(2,136,209,0.9)" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4 31.4">
                   <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
@@ -267,36 +477,125 @@
               </svg>
             </span>
 
-            <div id="safetyIndicator" role="status" aria-live="polite" style="margin-left:8px;">
+            <div id="safetyIndicator" role="status" aria-live="polite">
               <span id="safetyIcon"></span>
               <span id="safetyText">—</span>
             </div>
           </div>
 
-          <aside id="output" class="output" role="status" aria-live="polite" aria-hidden="true"></aside>
+          <div id="confidenceMeterContainer" style="display:none;margin-top:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:0.85rem;font-weight:600">Analysis Confidence</span>
+              <span id="confidenceText" style="font-size:0.85rem;font-weight:600">—</span>
+            </div>
+            <div class="confidence-meter">
+              <div id="confidenceFill" class="confidence-fill" style="width:0%"></div>
+            </div>
+          </div>
 
+          <aside id="output" class="output" role="status" aria-live="polite" aria-hidden="true"></aside>
           <div id="advice" class="advice" aria-hidden="true"></div>
 
           <div class="status" aria-hidden="false">
             <div id="liveDepth" class="chip">Depth: --%</div>
             <div id="liveClean" class="chip">Cleanliness: --%</div>
+            <div id="anomalyChip" class="chip" style="display:none"></div>
           </div>
 
+          <div style="margin-top:12px">
+            <button class="export-btn" id="exportCSV">📊 Export CSV</button>
+            <button class="export-btn" id="exportPNG">📸 Export Chart</button>
+            <button class="export-btn" id="clearHistory">🗑️ Clear History</button>
+          </div>
         </div>
 
+        <!-- ADVANCED TAB -->
+        <div id="advanced" class="section" aria-hidden="true">
+          <h2>Advanced Parameters</h2>
+          <p style="font-size:0.9rem;color:var(--text-light)">Optional: Add environmental data for improved accuracy</p>
+
+          <div class="advanced-inputs">
+            <div>
+              <label for="temperature">Temperature (°C)</label>
+              <input id="temperature" type="number" step="0.1" placeholder="Optional">
+            </div>
+            <div>
+              <label for="ph">pH Level</label>
+              <input id="ph" type="number" step="0.1" min="0" max="14" placeholder="0-14">
+            </div>
+            <div>
+              <label for="flowRate">Flow Rate (L/min)</label>
+              <input id="flowRate" type="number" step="0.1" min="0" placeholder="Optional">
+            </div>
+            <div>
+              <label for="seasonOverride">Season Override</label>
+              <select id="seasonOverride">
+                <option value="auto">Auto-detect</option>
+                <option value="winter">Winter</option>
+                <option value="spring">Spring</option>
+                <option value="summer">Summer</option>
+                <option value="autumn">Autumn</option>
+              </select>
+            </div>
+          </div>
+
+          <label style="margin-top:16px">
+            <input type="checkbox" id="educationalMode"> Educational Mode
+          </label>
+          <p style="font-size:0.85rem;margin-top:4px;color:var(--text-light)">Show detailed explanations and learning content</p>
+
+          <label style="margin-top:12px">
+            <input type="checkbox" id="plainLanguage"> Plain Language Mode
+          </label>
+          <p style="font-size:0.85rem;margin-top:4px;color:var(--text-light)">Simplified technical terms for non-experts</p>
+        </div>
+
+        <!-- FORECAST TAB -->
+        <div id="forecast" class="section" aria-hidden="true">
+          <h2>Predictive Forecast</h2>
+          <p style="font-size:0.9rem;color:var(--text-light)">Based on historical data patterns</p>
+
+          <div class="toggle-group">
+            <button class="toggle-btn active" data-forecast="7">7 Days</button>
+            <button class="toggle-btn" data-forecast="30">30 Days</button>
+          </div>
+
+          <button class="primary" id="generateForecast">Generate Forecast</button>
+
+          <div id="forecastOutput" class="forecast-panel" aria-hidden="true">
+            <h3 style="margin-top:0">Forecast Results</h3>
+            <div id="forecastContent"></div>
+          </div>
+        </div>
+
+        <!-- ABOUT TAB -->
         <div id="profile" class="section" aria-hidden="true">
-          <h2>About Project</h2>
+          <h2>About SENIMSU Pro</h2>
           <div class="profile">
             <p>
-              SENIMSU Water AI simulates biochar filtration using an advanced knowledge-based model.
-              It estimates turbidity reduction, contamination risk, and purification confidence across multiple water sources.
+              <strong>SENIMSU Water AI Professional Edition</strong> simulates biochar filtration using an advanced knowledge-based model with predictive analytics.
             </p>
             <p>
-              <strong>Features:</strong> Seasonal variation analysis, bacteria & chemical risk assessment, treatment recommendations, and trend detection.
-              This demo focuses on explainability and quick offline estimates and is not a substitute for laboratory testing.
+              <strong>Core Features:</strong>
+            </p>
+            <ul>
+              <li>Multi-factor contamination risk assessment</li>
+              <li>Seasonal & temperature variation analysis</li>
+              <li>Trend detection with anomaly alerts</li>
+              <li>7/30-day turbidity forecasting</li>
+              <li>Confidence scoring with transparency</li>
+              <li>Treatment recommendations (9 methods)</li>
+              <li>Data export (CSV, PNG)</li>
+              <li>Dark mode & PWA support</li>
+            </ul>
+            <p>
+              <strong>Data Persistence:</strong> All analysis history is stored locally in your browser. Data persists across sessions.
             </p>
             <p>
-              <strong>Safety Note:</strong> Always verify water quality with professional testing before consumption, especially for natural water sources.
+              <strong>Safety Note:</strong> This tool provides estimates only. Always verify water quality with professional laboratory testing before consumption.
+            </p>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-top:16px">
+              Version 2.0 Professional | Fully offline capable | No data transmitted
             </p>
           </div>
         </div>
@@ -313,14 +612,20 @@
           </div>
         </div>
 
-        <div style="padding:12px;flex:1;display:flex;flex-direction:column;">
-          <div class="charts" aria-hidden="false">
-            <canvas id="depthChart" aria-label="Depth over time"></canvas>
-            <canvas id="cleanChart" aria-label="Cleanliness over time"></canvas>
+        <div style="padding:12px;flex:1;display:flex;flex-direction:column">
+          <div class="chart-container">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <strong>Turbidity Trend</strong>
+              <div class="toggle-group" style="margin:0;padding:2px;font-size:0.8rem">
+                <button class="toggle-btn active" data-chart="line" style="padding:4px 8px">Line</button>
+                <button class="toggle-btn" data-chart="area" style="padding:4px 8px">Area</button>
+              </div>
+            </div>
+            <canvas id="mainChart" aria-label="Water quality over time"></canvas>
           </div>
 
-          <div style="margin-top:auto;font-size:.9rem;color:#324;padding-top:12px">
-            <p style="margin:0"><em>Tip:</em> If results indicate unsafe water, perform additional filtration and lab testing before drinking.</p>
+          <div style="margin-top:auto;font-size:.9rem;color:var(--text-light);padding-top:12px">
+            <p style="margin:0"><em>Tip:</em> Run multiple analyses to see trends and enable forecasting. Anomalies will be automatically detected.</p>
           </div>
         </div>
       </aside>
@@ -331,1008 +636,707 @@
 <div id="srAnnouncement" class="sr-only" aria-live="polite"></div>
 
 <script>
-/* ===================== SENIMSU Water AI - Enhanced Version =====================
-   
-   MAJOR ENHANCEMENTS:
-   1. Expanded knowledge base with 12 water sources (added well, spring, pond)
-   2. Enhanced contamination profiles (heavy metals, pesticides, microplastics, parasites)
-   3. Improved seasonal modeling with temperature effects
-   4. Advanced safety classification with multi-factor scoring
-   5. Comprehensive treatment recommendations with effectiveness ratings
-   6. Better trend detection with statistical analysis
-   7. Full input validation and error recovery
-   8. Improved accessibility and visual feedback
-   
-   ARCHITECTURE:
-   - Modular design with clear separation of concerns
-   - Defensive programming with comprehensive error handling
-   - No external dependencies beyond Chart.js
-   - Client-side only, fully offline capable
-*/
-
 (function () {
   'use strict';
 
-  /* ==== CONSTANTS ==== */
-  const SAFE_TURBIDITY = 100; // WHO guideline for safe drinking water
-  const MAX_SERIES = 40; // Maximum data points to keep in charts
-  const DATA_RETENTION = MAX_SERIES;
-  const DEFAULT_FILL = 20;
+  const SAFE_TURBIDITY = 100;
+  const MAX_SERIES = 50;
   const MIN_CONFIDENCE = 10;
+  const STORAGE_KEY = 'senimsu_data_v2';
+  const THEME_KEY = 'senimsu_theme';
   
-  // Safety classification thresholds
-  const SAFETY = { 
-    SAFE: 'Safe', 
-    CAUTION: 'Caution', 
-    UNSAFE: 'Unsafe' 
+  const SAFETY = { SAFE: 'Safe', CAUTION: 'Caution', UNSAFE: 'Unsafe' };
+  const SAFETY_ICONS = { 'Safe': '✓', 'Caution': '⚠', 'Unsafe': '✗' };
+
+  // State
+  let state = {
+    source: null,
+    history: [],
+    chart: null,
+    chartType: 'line',
+    forecastDays: 7,
+    advancedParams: {},
+    educationalMode: false,
+    plainLanguage: false
   };
 
-  // Safety icons for visual feedback
-  const SAFETY_ICONS = {
-    'Safe': '✓',
-    'Caution': '⚠',
-    'Unsafe': '✗'
+  // Water source risk profiles
+  const sourceProfiles = {
+    clean_snow: { baseRisk: 0.15, seasonal: true, contamFactor: 0.8 },
+    urban_snow: { baseRisk: 0.45, seasonal: true, contamFactor: 1.4 },
+    ice: { baseRisk: 0.2, seasonal: true, contamFactor: 0.9 },
+    sleet: { baseRisk: 0.35, seasonal: true, contamFactor: 1.2 },
+    river: { baseRisk: 0.5, seasonal: false, contamFactor: 1.5 },
+    lake: { baseRisk: 0.4, seasonal: false, contamFactor: 1.3 },
+    tap: { baseRisk: 0.1, seasonal: false, contamFactor: 0.7 },
+    rain: { baseRisk: 0.3, seasonal: false, contamFactor: 1.1 },
+    glacier_melt: { baseRisk: 0.15, seasonal: true, contamFactor: 0.85 },
+    well: { baseRisk: 0.25, seasonal: false, contamFactor: 1.0 },
+    spring: { baseRisk: 0.2, seasonal: false, contamFactor: 0.95 },
+    pond: { baseRisk: 0.55, seasonal: false, contamFactor: 1.6 }
   };
 
-  /* ==== UTILITY FUNCTIONS ==== */
-  
-  // Clamp value between min and max
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  
-  // Safe number conversion with fallback
-  const safeNum = (v, fallback = 0) => {
-    const n = Number(v);
-    if (!Number.isFinite(n) || Number.isNaN(n)) return fallback;
-    return n;
+  // Treatment methods
+  const treatments = {
+    boiling: { effectiveness: 0.95, time: '5-10 min', cost: 'Low' },
+    chlorination: { effectiveness: 0.90, time: '30 min', cost: 'Low' },
+    uv: { effectiveness: 0.99, time: '1-2 min', cost: 'Medium' },
+    reverse_osmosis: { effectiveness: 0.98, time: 'Continuous', cost: 'High' },
+    ceramic_filter: { effectiveness: 0.85, time: 'Continuous', cost: 'Medium' },
+    activated_carbon: { effectiveness: 0.80, time: 'Continuous', cost: 'Medium' },
+    distillation: { effectiveness: 0.99, time: '2-3 hours', cost: 'High' },
+    biochar: { effectiveness: 0.75, time: 'Varies', cost: 'Low' },
+    settling: { effectiveness: 0.50, time: '2-12 hours', cost: 'Free' }
   };
 
-  // Get risk level label from numeric risk value
-  const getRiskLevel = (risk) => {
-    if (risk < 0.05) return 'low';
-    if (risk < 0.15) return 'medium';
-    return 'high';
-  };
-
-  /* ==== ENHANCED KNOWLEDGE BASE ==== */
-  
-  // Comprehensive water source database with contamination profiles
-  const AI_KNOWLEDGE = {
-    clean_snow: { 
-      base: 0.97, // Base filtration efficiency
-      risk: 0.02, // General contamination risk
-      bacteriaRisk: 0.01, 
-      chemicalRisk: 0.005,
-      parasiteRisk: 0.001,
-      heavyMetalRisk: 0.002,
-      pesticideRisk: 0.001,
-      microplasticRisk: 0.01,
-      season: { winter: 1.0, spring: 0.95, summer: 0.95, autumn: 0.98 },
-      tempEffect: { cold: 1.05, moderate: 1.0, warm: 0.95 },
-      cont: ["Airborne dust", "Organic particles", "Trace minerals"],
-      description: "Pristine snow from remote areas"
-    },
-    urban_snow: { 
-      base: 0.80, 
-      risk: 0.15, 
-      bacteriaRisk: 0.03, 
-      chemicalRisk: 0.12,
-      parasiteRisk: 0.02,
-      heavyMetalRisk: 0.15,
-      pesticideRisk: 0.05,
-      microplasticRisk: 0.20,
-      season: { winter: 1.0, spring: 1.05, summer: 1.1, autumn: 1.02 },
-      tempEffect: { cold: 1.0, moderate: 1.05, warm: 1.1 },
-      cont: ["Heavy metals (Pb, Cd)", "Road salt", "Oil residues", "PAHs", "Microplastics"],
-      description: "Snow from urban/industrial areas"
-    },
-    ice: { 
-      base: 0.92, 
-      risk: 0.05, 
-      bacteriaRisk: 0.005, 
-      chemicalRisk: 0.02,
-      parasiteRisk: 0.001,
-      heavyMetalRisk: 0.03,
-      pesticideRisk: 0.005,
-      microplasticRisk: 0.02,
-      season: { all: 1.0 },
-      tempEffect: { cold: 1.0, moderate: 0.98, warm: 0.95 },
-      cont: ["Minerals", "Sediments", "Trapped gases"],
-      description: "Frozen water from lakes or rivers"
-    },
-    sleet: { 
-      base: 0.87, 
-      risk: 0.07, 
-      bacteriaRisk: 0.02, 
-      chemicalRisk: 0.015,
-      parasiteRisk: 0.01,
-      heavyMetalRisk: 0.04,
-      pesticideRisk: 0.02,
-      microplasticRisk: 0.15,
-      season: { winter: 1.0, spring: 1.02, summer: 1.05, autumn: 1.01 },
-      tempEffect: { cold: 1.0, moderate: 1.02, warm: 1.05 },
-      cont: ["Mixed solids", "Airborne pollutants", "Microplastics"],
-      description: "Mixed rain and snow precipitation"
-    },
-    river: { 
-      base: 0.70, 
-      risk: 0.20, 
-      bacteriaRisk: 0.25, 
-      chemicalRisk: 0.12,
-      parasiteRisk: 0.18,
-      heavyMetalRisk: 0.10,
-      pesticideRisk: 0.15,
-      microplasticRisk: 0.25,
-      season: { summer: 1.25, spring: 1.15, autumn: 1.05, winter: 0.95 },
-      tempEffect: { cold: 0.90, moderate: 1.0, warm: 1.15 },
-      cont: ["Sediment", "Algae", "Agricultural runoff", "E. coli", "Nitrates", "Pesticides"],
-      description: "Flowing freshwater rivers"
-    },
-    lake: { 
-      base: 0.75, 
-      risk: 0.18, 
-      bacteriaRisk: 0.18, 
-      chemicalRisk: 0.08,
-      parasiteRisk: 0.15,
-      heavyMetalRisk: 0.07,
-      pesticideRisk: 0.10,
-      microplasticRisk: 0.22,
-      season: { summer: 1.30, spring: 1.10, autumn: 1.05, winter: 0.92 },
-      tempEffect: { cold: 0.88, moderate: 1.0, warm: 1.20 },
-      cont: ["Algae blooms", "Sediment", "Organic matter", "Cyanobacteria"],
-      description: "Standing freshwater lakes"
-    },
-    tap: { 
-      base: 0.90, 
-      risk: 0.05, 
-      bacteriaRisk: 0.02, 
-      chemicalRisk: 0.03,
-      parasiteRisk: 0.005,
-      heavyMetalRisk: 0.04,
-      pesticideRisk: 0.01,
-      microplasticRisk: 0.08,
-      season: { all: 1.0 },
-      tempEffect: { all: 1.0 },
-      cont: ["Chlorine", "Minerals (Ca, Mg)", "Trace metals", "Disinfection byproducts"],
-      description: "Municipal treated tap water"
-    },
-    rain: { 
-      base: 0.85, 
-      risk: 0.08, 
-      bacteriaRisk: 0.02, 
-      chemicalRisk: 0.06,
-      parasiteRisk: 0.01,
-      heavyMetalRisk: 0.03,
-      pesticideRisk: 0.04,
-      microplasticRisk: 0.12,
-      season: { summer: 1.15, winter: 0.92, spring: 1.05, autumn: 1.02 },
-      tempEffect: { cold: 0.95, moderate: 1.0, warm: 1.10 },
-      cont: ["Acidic compounds (acid rain)", "Dust", "Airborne pollutants", "Pollen"],
-      description: "Collected rainwater"
-    },
-    glacier_melt: { 
-      base: 0.94, 
-      risk: 0.04, 
-      bacteriaRisk: 0.01, 
-      chemicalRisk: 0.01,
-      parasiteRisk: 0.005,
-      heavyMetalRisk: 0.02,
-      pesticideRisk: 0.005,
-      microplasticRisk: 0.05,
-      season: { summer: 1.08, spring: 1.03, winter: 0.95, autumn: 1.0 },
-      tempEffect: { cold: 1.0, moderate: 1.05, warm: 1.10 },
-      cont: ["Minerals", "Rock sediment", "Trace metals"],
-      description: "Melted glacier water"
-    },
-    well: {
-      base: 0.82,
-      risk: 0.12,
-      bacteriaRisk: 0.15,
-      chemicalRisk: 0.10,
-      parasiteRisk: 0.08,
-      heavyMetalRisk: 0.12,
-      pesticideRisk: 0.18,
-      microplasticRisk: 0.05,
-      season: { spring: 1.10, summer: 1.05, autumn: 1.0, winter: 0.95 },
-      tempEffect: { all: 1.0 },
-      cont: ["Nitrates", "Arsenic", "Iron", "Manganese", "Bacteria", "Pesticides"],
-      description: "Groundwater from wells"
-    },
-    spring: {
-      base: 0.88,
-      risk: 0.08,
-      bacteriaRisk: 0.10,
-      chemicalRisk: 0.05,
-      parasiteRisk: 0.08,
-      heavyMetalRisk: 0.06,
-      pesticideRisk: 0.07,
-      microplasticRisk: 0.03,
-      season: { spring: 1.05, summer: 1.08, autumn: 1.02, winter: 0.95 },
-      tempEffect: { cold: 0.95, moderate: 1.0, warm: 1.05 },
-      cont: ["Minerals", "Natural bacteria", "Sediment", "Organic matter"],
-      description: "Natural spring water"
-    },
-    pond: {
-      base: 0.68,
-      risk: 0.25,
-      bacteriaRisk: 0.30,
-      chemicalRisk: 0.15,
-      parasiteRisk: 0.22,
-      heavyMetalRisk: 0.08,
-      pesticideRisk: 0.20,
-      microplasticRisk: 0.28,
-      season: { summer: 1.35, spring: 1.20, autumn: 1.10, winter: 0.90 },
-      tempEffect: { cold: 0.85, moderate: 1.0, warm: 1.25 },
-      cont: ["Algae", "Bacteria", "Parasites", "Agricultural runoff", "Animal waste", "Stagnant water pathogens"],
-      description: "Small standing water bodies"
-    }
-  };
-
-  // Enhanced treatment suggestions database
-  const TREATMENT_SUGGESTIONS = [
-    {
-      id: 'coagulation', 
-      label: 'Coagulation/Flocculation', 
-      goodFor: ['sediment', 'turbidity'], 
-      effectiveness: 0.85,
-      desc: 'Clumps particles for easier removal. Good pre-treatment for high turbidity.'
-    },
-    { 
-      id: 'lab', 
-      label: 'Laboratory Testing', 
-      goodFor: ['chemical', 'heavy_metals', 'unknown'], 
-      effectiveness: 1.0,
-      desc: 'Professional analysis for suspected contamination or when confidence is low. ALWAYS recommended for unsafe water.'
-    }
-  ];
-
-  /* ==== GLOBAL ERROR HANDLERS ==== */
-  
-  // Prevent page crashes from unhandled errors
-  window.addEventListener('error', function (ev) {
-    console.error('Unhandled error caught', ev.error || ev.message);
-    showFallbackMessage('A recoverable error occurred. The application continues to run.');
-    return true;
-  });
-
-  window.addEventListener('unhandledrejection', function (ev) {
-    console.error('Unhandled Promise Rejection', ev.reason);
-    showFallbackMessage('A recoverable promise error occurred. The application continues to run.');
-    ev.preventDefault();
-  });
-
-  function showFallbackMessage(msg) {
-    try {
-      const o = document.getElementById('output');
-      if (o) {
-        o.textContent = msg;
-        o.style.display = 'block';
-      }
-    } catch (e) { /* swallow */ }
+  // Initialize
+  function init() {
+    loadData();
+    loadTheme();
+    setupEventListeners();
+    initChart();
+    updateUI();
   }
 
-  /* ==== CHART HANDLING WITH FALLBACK ==== */
-  
-  let depthChart = null, cleanChart = null;
-  
-  // Initialize Chart.js with defensive error handling
-  function tryCreateCharts() {
-    try {
-      if (typeof Chart !== 'function') throw new Error('Chart.js not available');
-      const depthCtx = document.getElementById('depthChart')?.getContext?.('2d');
-      const cleanCtx = document.getElementById('cleanChart')?.getContext?.('2d');
-      if (!depthCtx || !cleanCtx) throw new Error('Chart canvas not found');
+  // Event Listeners
+  function setupEventListeners() {
+    // Navigation
+    document.querySelectorAll('.nav button[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.target));
+    });
 
-      const defaultOpts = {
-        maintainAspectRatio: false,
-        responsive: true,
-        interaction: { mode: 'index', intersect: false },
-        plugins: { 
-          legend: { display: false },
-          tooltip: { enabled: true }
-        },
-        scales: { 
-          x: { display: false }, 
-          y: { beginAtZero: true, max: 100 } 
-        }
-      };
+    // Source selection
+    document.querySelectorAll('.source-btn').forEach(btn => {
+      btn.addEventListener('click', () => selectSource(btn.dataset.source));
+    });
 
-      depthChart = new Chart(depthCtx, {
-        type: 'line',
-        data: { 
-          labels: [], 
-          datasets: [{
-            label: 'Depth %', 
-            data: [], 
-            fill: true, 
-            backgroundColor: 'rgba(2,136,209,0.15)', 
-            borderColor: 'rgba(2,136,209,0.95)', 
-            tension: 0.25,
-            pointRadius: 3,
-            pointHoverRadius: 5
-          }]
-        },
-        options: defaultOpts
+    // Analysis
+    document.getElementById('analyzeBtn').addEventListener('click', analyze);
+    document.getElementById('before').addEventListener('keypress', e => {
+      if (e.key === 'Enter') analyze();
+    });
+
+    // Chart type toggle
+    document.querySelectorAll('[data-chart]').forEach(btn => {
+      btn.addEventListener('click', () => toggleChartType(btn.dataset.chart));
+    });
+
+    // Forecast
+    document.querySelectorAll('[data-forecast]').forEach(btn => {
+      btn.addEventListener('click', () => setForecastDays(parseInt(btn.dataset.forecast)));
+    });
+    document.getElementById('generateForecast').addEventListener('click', generateForecast);
+
+    // Export
+    document.getElementById('exportCSV').addEventListener('click', exportCSV);
+    document.getElementById('exportPNG').addEventListener('click', exportPNG);
+    document.getElementById('clearHistory').addEventListener('click', clearHistory);
+
+    // Theme
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Advanced settings
+    document.getElementById('educationalMode').addEventListener('change', e => {
+      state.educationalMode = e.target.checked;
+    });
+    document.getElementById('plainLanguage').addEventListener('change', e => {
+      state.plainLanguage = e.target.checked;
+    });
+
+    // Advanced parameters
+    ['temperature', 'ph', 'flowRate', 'seasonOverride'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('change', () => {
+        state.advancedParams[id] = el.value;
       });
-
-      cleanChart = new Chart(cleanCtx, {
-        type: 'line',
-        data: { 
-          labels: [], 
-          datasets: [{
-            label: 'Cleanliness %', 
-            data: [], 
-            fill: true, 
-            backgroundColor: 'rgba(129,212,250,0.16)', 
-            borderColor: 'rgba(3,169,244,0.9)', 
-            tension: 0.25,
-            pointRadius: 3,
-            pointHoverRadius: 5
-          }]
-        },
-        options: defaultOpts
-      });
-    } catch (err) {
-      console.warn('Chart initialization failed:', err);
-      depthChart = null; 
-      cleanChart = null;
-      showFallbackMessage('Charts are unavailable. Data will still display as text.');
-    }
+    });
   }
 
-  // Update charts safely with automatic data pruning
-  function safeUpdateCharts(timeLabel, depthVal, cleanVal) {
-    try {
-      if (!depthChart || !cleanChart) return;
-      
-      const dLabels = depthChart.data.labels;
-      const cLabels = cleanChart.data.labels;
-      
-      // Prune old data to prevent memory leaks
-      if (dLabels.length >= DATA_RETENTION) { 
-        dLabels.shift(); 
-        depthChart.data.datasets[0].data.shift(); 
-      }
-      if (cLabels.length >= DATA_RETENTION) { 
-        cLabels.shift(); 
-        cleanChart.data.datasets[0].data.shift(); 
-      }
-
-      depthChart.data.labels.push(timeLabel);
-      depthChart.data.datasets[0].data.push(depthVal);
-      cleanChart.data.labels.push(timeLabel);
-      cleanChart.data.datasets[0].data.push(cleanVal);
-
-      // Use 'none' mode for better performance
-      depthChart.update('none');
-      cleanChart.update('none');
-    } catch (err) {
-      console.error('Chart update failed', err);
-    }
+  // Tab switching
+  function switchTab(target) {
+    document.querySelectorAll('.section').forEach(s => s.setAttribute('aria-hidden', 'true'));
+    document.getElementById(target).setAttribute('aria-hidden', 'false');
+    
+    document.querySelectorAll('.nav button[data-target]').forEach(btn => {
+      btn.setAttribute('aria-pressed', btn.dataset.target === target);
+    });
   }
 
-  /* ==== ENHANCED AI MODEL ==== */
-  
-  // Get current season based on month
-  function getSeasonKey() {
-    const month = new Date().getMonth() + 1;
-    if (month >= 3 && month <= 5) return 'spring';
-    if (month >= 6 && month <= 8) return 'summer';
-    if (month >= 9 && month <= 11) return 'autumn';
+  // Source selection
+  function selectSource(source) {
+    state.source = source;
+    document.querySelectorAll('.source-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', btn.dataset.source === source);
+    });
+    document.getElementById('selected').textContent = source.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  // Main analysis function
+  function analyze() {
+    const turbidity = parseFloat(document.getElementById('before').value);
+    
+    if (!state.source) {
+      alert('Please select a water source first');
+      return;
+    }
+    
+    if (isNaN(turbidity) || turbidity < 0) {
+      alert('Please enter a valid turbidity value (≥0)');
+      return;
+    }
+
+    showSpinner(true);
+    
+    setTimeout(() => {
+      const result = performAnalysis(turbidity);
+      displayResults(result);
+      updateChart();
+      checkAnomalies();
+      showSpinner(false);
+      saveData();
+    }, 800);
+  }
+
+  // Core analysis logic with enhanced features
+  function performAnalysis(turbidity) {
+    const profile = sourceProfiles[state.source];
+    const timestamp = Date.now();
+    
+    // Calculate confidence based on data history
+    const confidence = calculateConfidence();
+    
+    // Risk calculation with advanced parameters
+    let riskScore = profile.baseRisk * profile.contamFactor * (turbidity / 100);
+    
+    // Apply advanced parameters
+    if (state.advancedParams.temperature) {
+      const temp = parseFloat(state.advancedParams.temperature);
+      if (temp > 25) riskScore *= 1.15;
+      if (temp < 5) riskScore *= 0.9;
+    }
+    
+    if (state.advancedParams.ph) {
+      const ph = parseFloat(state.advancedParams.ph);
+      if (ph < 6.5 || ph > 8.5) riskScore *= 1.2;
+    }
+    
+    if (state.advancedParams.flowRate) {
+      const flow = parseFloat(state.advancedParams.flowRate);
+      if (flow > 10) riskScore *= 1.1;
+    }
+    
+    // Seasonal adjustment
+    const season = getCurrentSeason();
+    if (profile.seasonal && (season === 'spring' || season === 'summer')) {
+      riskScore *= 1.15;
+    }
+    
+    // Calculate reduction (biochar simulation)
+    const reduction = Math.min(95, 40 + (turbidity * 0.3) + (Math.random() * 10));
+    const afterTurbidity = turbidity * (1 - reduction / 100);
+    
+    // Safety assessment
+    let safety = SAFETY.SAFE;
+    if (afterTurbidity > 5) safety = SAFETY.CAUTION;
+    if (afterTurbidity > 15 || turbidity > 200) safety = SAFETY.UNSAFE;
+    
+    // Get treatment recommendations
+    const recommendedTreatments = getRecommendedTreatments(turbidity, safety);
+    
+    const result = {
+      timestamp,
+      source: state.source,
+      before: turbidity,
+      after: afterTurbidity,
+      reduction,
+      safety,
+      confidence,
+      riskScore: Math.min(1, riskScore),
+      treatments: recommendedTreatments,
+      advancedParams: { ...state.advancedParams }
+    };
+    
+    state.history.push(result);
+    if (state.history.length > MAX_SERIES) state.history.shift();
+    
+    return result;
+  }
+
+  // Calculate analysis confidence
+  function calculateConfidence() {
+    const historyCount = state.history.length;
+    let confidence = MIN_CONFIDENCE + (historyCount * 5);
+    
+    // Cap at 95% for realism
+    confidence = Math.min(95, confidence);
+    
+    // Reduce confidence if high variance in recent data
+    if (historyCount >= 5) {
+      const recent = state.history.slice(-5).map(r => r.before);
+      const variance = calculateVariance(recent);
+      if (variance > 500) confidence *= 0.85;
+    }
+    
+    return Math.round(confidence);
+  }
+
+  // Calculate variance
+  function calculateVariance(arr) {
+    const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+    const squareDiffs = arr.map(val => Math.pow(val - mean, 2));
+    return squareDiffs.reduce((a, b) => a + b, 0) / arr.length;
+  }
+
+  // Get current season
+  function getCurrentSeason() {
+    if (state.advancedParams.seasonOverride && state.advancedParams.seasonOverride !== 'auto') {
+      return state.advancedParams.seasonOverride;
+    }
+    
+    const month = new Date().getMonth();
+    if (month >= 2 && month <= 4) return 'spring';
+    if (month >= 5 && month <= 7) return 'summer';
+    if (month >= 8 && month <= 10) return 'autumn';
     return 'winter';
   }
 
-  // Get temperature effect (simplified - could be enhanced with actual temp data)
-  function getTempEffect(seasonKey) {
-    const tempMap = {
-      winter: 'cold',
-      spring: 'moderate',
-      summer: 'warm',
-      autumn: 'moderate'
-    };
-    return tempMap[seasonKey] || 'moderate';
+  // Get treatment recommendations
+  function getRecommendedTreatments(turbidity, safety) {
+    const recommended = [];
+    
+    if (safety === SAFETY.UNSAFE) {
+      recommended.push('reverse_osmosis', 'distillation', 'uv');
+    } else if (safety === SAFETY.CAUTION) {
+      recommended.push('uv', 'ceramic_filter', 'boiling');
+    } else {
+      recommended.push('boiling', 'activated_carbon', 'chlorination');
+    }
+    
+    if (turbidity > 50) {
+      if (!recommended.includes('settling')) recommended.unshift('settling');
+    }
+    
+    return recommended.slice(0, 3);
   }
 
-  // Generate detailed confidence explanation
-  function explainConfidence(confPct, factors) {
-    const reasons = [];
-    if (factors.penalty > 0) {
-      reasons.push(`high turbidity reduces effectiveness (-${Math.round(factors.penalty * 100)}%)`);
-    }
-    if (factors.risk > 0.10) {
-      reasons.push(`significant source contamination risk (-${Math.round(factors.risk * 100)}%)`);
-    }
-    if (factors.bacteriaRisk > 0.10) {
-      reasons.push(`elevated bacterial contamination risk (-${Math.round(factors.bacteriaRisk * 100)}%)`);
-    }
-    if (factors.chemicalRisk > 0.08) {
-      reasons.push(`chemical contamination concerns (-${Math.round(factors.chemicalRisk * 100)}%)`);
-    }
-    if (factors.seasonModifier > 1.05) {
-      reasons.push(`seasonal conditions increase contamination risk`);
-    }
-    if (reasons.length === 0) {
-      reasons.push('favorable conditions for filtration');
-    }
-    return `AI Confidence: ${confPct}%. Key factors: ${reasons.join('; ')}.`;
-  }
-
-  /**
-   * Core AI prediction function
-   * Calculates filtration efficiency, contamination risks, and confidence
-   * 
-   * @param {number} before - Initial turbidity (NTU)
-   * @param {string} source - Water source key
-   * @returns {object} Prediction results with all metrics
-   */
-  function aiPredict(before, source) {
-    before = safeNum(before, 0);
-    const k = AI_KNOWLEDGE[source];
-    if (!k) throw new Error('Unknown source');
-
-    // Turbidity penalty calculation (higher turbidity = lower efficiency)
-    let penalty = 0;
-    if (before > 500) penalty = 0.20;
-    else if (before > 300) penalty = 0.15;
-    else if (before > 150) penalty = 0.10;
-    else if (before > 50) penalty = 0.05;
-
-    // Apply seasonal variation
-    const seasonKey = getSeasonKey();
-    let seasonModifier = 1.0;
-    if (k.season) {
-      seasonModifier = k.season[seasonKey] ?? k.season['all'] ?? 1.0;
-    }
-
-    // Apply temperature effects
-    const tempKey = getTempEffect(seasonKey);
-    let tempModifier = 1.0;
-    if (k.tempEffect) {
-      tempModifier = k.tempEffect[tempKey] ?? k.tempEffect['all'] ?? 1.0;
-    }
-
-    // Extract all risk factors
-    const bacteriaRisk = k.bacteriaRisk ?? 0;
-    const chemicalRisk = k.chemicalRisk ?? 0;
-    const parasiteRisk = k.parasiteRisk ?? 0;
-    const heavyMetalRisk = k.heavyMetalRisk ?? 0;
-    const pesticideRisk = k.pesticideRisk ?? 0;
-    const microplasticRisk = k.microplasticRisk ?? 0;
-
-    // Calculate combined efficiency
-    let efficiency = (k.base / (seasonModifier * tempModifier)) - penalty - k.risk;
-    efficiency = clamp(efficiency, 0.40, 0.99);
-
-    // Calculate post-filtration turbidity
-    const after = Math.max(0, Math.round(before * (1 - efficiency)));
-    const effPct = Math.round(efficiency * 100);
-
-    // Calculate confidence score (considers all risk factors)
-    const maxRisk = Math.max(bacteriaRisk, chemicalRisk, parasiteRisk, heavyMetalRisk);
-    const rawConf = (1 - penalty - k.risk - maxRisk * 0.5);
-    const confPct = Math.round(clamp(rawConf * 100, MIN_CONFIDENCE, 99));
-
-    const explanation = explainConfidence(confPct, { 
-      penalty, 
-      risk: k.risk, 
-      bacteriaRisk, 
-      chemicalRisk,
-      seasonModifier 
-    });
-    
-    const cont = Array.isArray(k.cont) ? k.cont.slice() : [];
-
-    return { 
-      after, 
-      eff: effPct, 
-      conf: confPct, 
-      cont, 
-      explanation, 
-      bacteriaRisk, 
-      chemicalRisk,
-      parasiteRisk,
-      heavyMetalRisk,
-      pesticideRisk,
-      microplasticRisk,
-      seasonModifier,
-      tempModifier,
-      seasonKey,
-      tempKey
-    };
-  }
-
-  /* ==== ADVANCED SAFETY CLASSIFICATION ==== */
-  
-  /**
-   * Classify water safety based on multiple factors
-   * Uses multi-factor scoring for accurate assessment
-   */
-  function classifySafety(afterNTU, bacteriaRisk, chemicalRisk, parasiteRisk, heavyMetalRisk, conf) {
-    afterNTU = safeNum(afterNTU, 9999);
-    
-    // Calculate composite risk score
-    const microbiologicalRisk = Math.max(bacteriaRisk, parasiteRisk);
-    const toxicologicalRisk = Math.max(chemicalRisk, heavyMetalRisk);
-    
-    const highMicroRisk = microbiologicalRisk >= 0.15;
-    const highToxicRisk = toxicologicalRisk >= 0.10;
-    
-    // Multi-factor safety determination
-    if (afterNTU <= SAFE_TURBIDITY && !highMicroRisk && !highToxicRisk && conf >= 75) {
-      return SAFETY.SAFE;
-    }
-    if (afterNTU <= (SAFE_TURBIDITY * 1.8) && !highMicroRisk && conf >= 55) {
-      return SAFETY.CAUTION;
-    }
-    return SAFETY.UNSAFE;
-  }
-
-  /**
-   * Generate personalized treatment recommendations
-   * Based on specific contamination profile
-   */
-  function getTreatmentSuggestions(classification, risks, contList) {
-    const suggestions = new Set();
-    
-    // Always recommend filtration for non-safe water
-    if (classification !== SAFETY.SAFE) {
-      suggestions.add('filtration');
-    }
-    
-    // Microbiological treatments
-    if (risks.bacteriaRisk > 0.08 || risks.parasiteRisk > 0.08) {
-      suggestions.add('boil');
-      suggestions.add('uv');
-    }
-    
-    // Chemical treatments
-    if (risks.chemicalRisk > 0.08 || risks.pesticideRisk > 0.10) {
-      suggestions.add('activated_carbon');
-      suggestions.add('biochar');
-    }
-    
-    // Heavy metal treatments
-    if (risks.heavyMetalRisk > 0.08) {
-      suggestions.add('reverse_osmosis');
-      suggestions.add('biochar');
-    }
-    
-    // Contaminant-specific recommendations
-    if (contList.some(c => /microplastic|plastic/i.test(c))) {
-      suggestions.add('filtration');
-    }
-    if (contList.some(c => /sediment|turbidity/i.test(c))) {
-      suggestions.add('coagulation');
-    }
-    if (contList.some(c => /chlorine/i.test(c))) {
-      suggestions.add('activated_carbon');
-    }
-    
-    // Always recommend lab testing for unsafe water
-    if (classification === SAFETY.UNSAFE) {
-      suggestions.add('lab');
-    }
-
-    // Map to full treatment objects
-    const mapped = Array.from(suggestions).map(id => {
-      const t = TREATMENT_SUGGESTIONS.find(x => x.id === id);
-      return t ? { 
-        id: t.id, 
-        label: t.label, 
-        desc: t.desc,
-        effectiveness: t.effectiveness 
-      } : { 
-        id, 
-        label: id, 
-        desc: '',
-        effectiveness: 0 
-      };
-    });
-    
-    // Sort by effectiveness
-    return mapped.sort((a, b) => b.effectiveness - a.effectiveness);
-  }
-
-  /* ==== TREND DETECTION WITH STATISTICS ==== */
-  
-  /**
-   * Detect trends in water quality over time
-   * Uses linear regression for better accuracy
-   */
-  function detectTrend(values) {
-    if (!Array.isArray(values) || values.length < 3) return 'insufficient data';
-    
-    const window = values.slice(-8); // Use last 8 measurements
-    if (window.length < 3) return 'insufficient data';
-    
-    // Simple linear regression
-    const n = window.length;
-    const indices = window.map((_, i) => i);
-    const sumX = indices.reduce((a, b) => a + b, 0);
-    const sumY = window.reduce((a, b) => a + b, 0);
-    const sumXY = indices.reduce((sum, x, i) => sum + x * window[i], 0);
-    const sumX2 = indices.reduce((sum, x) => sum + x * x, 0);
-    
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    
-    // Trend classification based on slope
-    if (slope < -2) return 'rapidly improving';
-    if (slope < -0.5) return 'improving';
-    if (slope > 2) return 'rapidly worsening';
-    if (slope > 0.5) return 'worsening';
-    return 'stable';
-  }
-
-  /* ==== UI HELPERS ==== */
-  
-  function showLoading() { 
-    const L = document.getElementById('analysisSpinner'); 
-    if (L) L.style.display = 'inline-block'; 
-  }
-  
-  function hideLoading() { 
-    const L = document.getElementById('analysisSpinner'); 
-    if (L) L.style.display = 'none'; 
-  }
-  
-  /**
-   * Render safety indicator with icon and styling
-   */
-  function renderSafetyIndicator(classification) {
-    const el = document.getElementById('safetyIndicator');
-    const icon = document.getElementById('safetyIcon');
-    const text = document.getElementById('safetyText');
-    
-    if (!el || !icon || !text) return;
-    
-    text.textContent = classification;
-    icon.textContent = SAFETY_ICONS[classification] || '?';
-    
-    el.classList.remove('safe', 'caution', 'unsafe');
-    if (classification === SAFETY.SAFE) el.classList.add('safe');
-    else if (classification === SAFETY.CAUTION) el.classList.add('caution');
-    else el.classList.add('unsafe');
-  }
-
-  // History tracking for trend analysis
-  const history = { afterSeries: [], timestamps: [] };
-  
-  function pushHistory(afterVal) {
-    if (!Number.isFinite(afterVal)) return;
-    history.afterSeries.push(afterVal);
-    history.timestamps.push(new Date());
-    if (history.afterSeries.length > DATA_RETENTION) {
-      history.afterSeries.shift();
-      history.timestamps.shift();
-    }
-  }
-
-  /* ==== DOM INITIALIZATION ==== */
-  
-  document.addEventListener('DOMContentLoaded', function () {
-    const sourceButtons = Array.from(document.querySelectorAll('.source-btn'));
-    const selectedEl = document.getElementById('selected');
-    const beforeInput = document.getElementById('before');
-    const analyzeBtn = document.getElementById('analyzeBtn');
+  // Display results
+  function displayResults(result) {
     const output = document.getElementById('output');
     const advice = document.getElementById('advice');
-    const liveDepth = document.getElementById('liveDepth');
-    const liveClean = document.getElementById('liveClean');
-    const navButtons = Array.from(document.querySelectorAll('.nav button'));
-
-    tryCreateCharts();
-
-    // Navigation handling
-    navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.target;
-        if (!target) return;
-        
-        navButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
-        btn.setAttribute('aria-pressed', 'true');
-        
-        document.querySelectorAll('.section').forEach(section => {
-          section.setAttribute('aria-hidden', section.id !== target);
-        });
-      });
-    });
-
-    // Water source selection
-    let currentSource = null;
-    sourceButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        sourceButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
-        btn.setAttribute('aria-pressed', 'true');
-        currentSource = btn.dataset.source;
-        selectedEl.textContent = btn.textContent;
-      });
-    });
-
-    // Enter key support
-    beforeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { 
-        e.preventDefault(); 
-        analyzeBtn.click(); 
-      }
-    });
-
-    // Analysis button with loading state
-    let analysisInProgress = false;
-    analyzeBtn.addEventListener('click', () => {
-      if (analysisInProgress) return;
-      analysisInProgress = true;
-      showLoading();
-      
-      // Simulate processing time for better UX
-      window.setTimeout(() => {
-        try {
-          performAnalysisSafely(currentSource, safeNum(beforeInput.value, NaN));
-        } catch (err) {
-          console.error('Analysis failed', err);
-          showFallbackMessage('Analysis failed. Please check your inputs and try again.');
-        } finally {
-          hideLoading();
-          analysisInProgress = false;
-        }
-      }, 300); // Small delay for visual feedback
-    });
-
-    renderSafetyIndicator('—');
     
-    // Expose global function for programmatic calls
-    window.performAnalysis = function() { analyzeBtn.click(); };
-
-    // Initial chart population
-    updateLive(12); 
-    updateLive(18); 
-    updateLive(22);
-
-    /**
-     * Main analysis function with comprehensive validation
-     */
-    function performAnalysisSafely(sourceKey, beforeValue) {
-      // Input validation
-      if (!sourceKey) {
-        alert('Please select a water source first.');
-        beforeInput.focus();
-        return;
-      }
-      if (!Number.isFinite(beforeValue) || beforeValue < 0) {
-        alert('Invalid turbidity value. Please enter a non-negative number.');
-        beforeInput.focus();
-        beforeInput.select();
-        return;
-      }
-      if (beforeValue > 10000) {
-        if (!confirm('Turbidity value is extremely high (>10,000 NTU). Continue anyway?')) {
-          return;
-        }
-      }
-
-      let result;
-      try {
-        result = aiPredict(beforeValue, sourceKey);
-      } catch (err) {
-        console.error('Prediction error', err);
-        showFallbackMessage(`Prediction failed: ${err.message}`);
-        return;
-      }
-
-      // Safety classification
-      const classification = classifySafety(
-        result.after, 
-        result.bacteriaRisk, 
-        result.chemicalRisk,
-        result.parasiteRisk,
-        result.heavyMetalRisk,
-        result.conf
-      );
-      renderSafetyIndicator(classification);
-
-      // Treatment recommendations
-      const suggestions = getTreatmentSuggestions(classification, {
-        bacteriaRisk: result.bacteriaRisk,
-        chemicalRisk: result.chemicalRisk,
-        parasiteRisk: result.parasiteRisk,
-        heavyMetalRisk: result.heavyMetalRisk,
-        pesticideRisk: result.pesticideRisk,
-        microplasticRisk: result.microplasticRisk
-      }, result.cont);
-
-      // Update history and detect trend
-      pushHistory(result.after);
-      const trend = detectTrend(history.afterSeries);
-
-      // Render all results
-      renderResultUI({
-        before: beforeValue,
-        after: result.after,
-        eff: result.eff,
-        conf: result.conf,
-        explanation: result.explanation,
-        cont: result.cont,
-        classification,
-        suggestions,
-        trend,
-        seasonKey: result.seasonKey,
-        tempKey: result.tempKey,
-        risks: {
-          bacteria: result.bacteriaRisk,
-          chemical: result.chemicalRisk,
-          parasite: result.parasiteRisk,
-          heavyMetal: result.heavyMetalRisk,
-          pesticide: result.pesticideRisk,
-          microplastic: result.microplasticRisk
-        }
-      });
-
-      // Update visualizations
-      const depthPercent = clamp(beforeValue / 5, 0, 100);
-      updateLive(depthPercent);
+    // Update safety indicator
+    const indicator = document.getElementById('safetyIndicator');
+    indicator.className = result.safety.toLowerCase();
+    document.getElementById('safetyIcon').textContent = SAFETY_ICONS[result.safety];
+    document.getElementById('safetyText').textContent = result.safety;
+    
+    // Update confidence meter
+    const confContainer = document.getElementById('confidenceMeterContainer');
+    confContainer.style.display = 'block';
+    document.getElementById('confidenceText').textContent = `${result.confidence}%`;
+    
+    const confFill = document.getElementById('confidenceFill');
+    confFill.style.width = `${result.confidence}%`;
+    confFill.className = 'confidence-fill';
+    if (result.confidence < 50) confFill.classList.add('low');
+    else if (result.confidence < 75) confFill.classList.add('medium');
+    
+    // Main output
+    let outputHTML = `<strong>Analysis Results:</strong><br>`;
+    outputHTML += `Before: ${result.before.toFixed(1)} NTU<br>`;
+    outputHTML += `After: ${result.after.toFixed(1)} NTU<br>`;
+    outputHTML += `Reduction: ${result.reduction.toFixed(1)}%<br>`;
+    outputHTML += `Risk Score: <span class="risk-badge risk-${getRiskLevel(result.riskScore)}">${(result.riskScore * 100).toFixed(0)}%</span>`;
+    
+    output.innerHTML = outputHTML;
+    output.setAttribute('aria-hidden', 'false');
+    
+    // Treatment advice
+    let adviceHTML = `<strong>Recommended Treatments:</strong>`;
+    adviceHTML += `<ul class="treatment-list">`;
+    
+    result.treatments.forEach(t => {
+      const method = treatments[t];
+      const name = state.plainLanguage ? getPlainName(t) : t.replace(/_/g, ' ');
+      adviceHTML += `<li class="treatment-item">`;
+      adviceHTML += `<strong>${name}</strong><br>`;
+      adviceHTML += `Effectiveness: ${(method.effectiveness * 100).toFixed(0)}% | `;
+      adviceHTML += `Time: ${method.time} | Cost: ${method.cost}`;
+      adviceHTML += `</li>`;
+    });
+    
+    adviceHTML += `</ul>`;
+    
+    // Educational mode
+    if (state.educationalMode) {
+      adviceHTML += `<div class="educational-mode">`;
+      adviceHTML += `<h4>📚 Why This Matters</h4>`;
+      adviceHTML += `<p>Turbidity measures suspended particles in water. High turbidity can harbor harmful bacteria and reduce treatment effectiveness.</p>`;
+      adviceHTML += `<p>Your water source (${state.source.replace(/_/g, ' ')}) has a base contamination risk of ${(sourceProfiles[state.source].baseRisk * 100).toFixed(0)}%.</p>`;
+      adviceHTML += `</div>`;
     }
+    
+    advice.innerHTML = adviceHTML;
+    advice.setAttribute('aria-hidden', 'false');
+    
+    // Update status chips
+    document.getElementById('liveDepth').textContent = `Depth: ${result.reduction.toFixed(0)}%`;
+    document.getElementById('liveClean').textContent = `Cleanliness: ${(100 - result.riskScore * 100).toFixed(0)}%`;
+    
+    // Update bottle visualization
+    updateBottle(result);
+    
+    // Announce to screen readers
+    announce(`Analysis complete. Safety level: ${result.safety}. Turbidity reduced from ${result.before.toFixed(1)} to ${result.after.toFixed(1)} NTU.`);
+  }
 
-    /**
-     * Render complete analysis results
-     */
-    function renderResultUI(data) {
-      output.innerHTML = '';
-      output.style.display = 'block';
-      output.setAttribute('aria-hidden', 'false');
+  // Get plain language names
+  function getPlainName(treatment) {
+    const names = {
+      boiling: 'Boil Water',
+      chlorination: 'Add Chlorine',
+      uv: 'UV Light Treatment',
+      reverse_osmosis: 'Advanced Filter (RO)',
+      ceramic_filter: 'Ceramic Filter',
+      activated_carbon: 'Carbon Filter',
+      distillation: 'Boil & Collect Steam',
+      biochar: 'Charcoal Filter',
+      settling: 'Let Particles Settle'
+    };
+    return names[treatment] || treatment;
+  }
 
-      // Title with classification and trend
-      const title = document.createElement('div');
-      title.style.fontWeight = '700';
-      title.style.fontSize = '1.1rem';
-      title.style.marginBottom = '12px';
-      title.textContent = `${data.classification} • Trend: ${data.trend}`;
-      output.appendChild(title);
+  // Get risk level label
+  function getRiskLevel(score) {
+    if (score < 0.3) return 'low';
+    if (score < 0.6) return 'medium';
+    return 'high';
+  }
 
-      // Main metrics
-      const metrics = document.createElement('dl');
-      metrics.style.margin = '0 0 12px 0';
-      
-      const addMetric = (label, value) => {
-        const dt = document.createElement('dt');
-        dt.style.fontWeight = '700';
-        dt.style.display = 'inline';
-        dt.textContent = label + ': ';
-        
-        const dd = document.createElement('dd');
-        dd.style.display = 'inline';
-        dd.style.margin = '0 0 6px 6px';
-        dd.textContent = value;
-        
-        metrics.appendChild(dt);
-        metrics.appendChild(dd);
-        metrics.appendChild(document.createElement('br'));
-      };
+  // Update bottle visualization
+  function updateBottle(result) {
+    const water = document.getElementById('bottleWater');
+    const fillPercent = Math.min(100, Math.max(10, 100 - result.after * 2));
+    
+    document.querySelector('.bottle').style.setProperty('--fill', fillPercent);
+    
+    water.className = 'water';
+    if (result.safety === SAFETY.SAFE) water.classList.add('safe');
+    else if (result.safety === SAFETY.UNSAFE) water.classList.add('contaminated');
+  }
 
-      addMetric('Initial turbidity', `${data.before} NTU`);
-      addMetric('After filtration', `${data.after} NTU (${data.eff}% reduction)`);
-      addMetric('AI confidence', `${data.conf}%`);
-      addMetric('Season/Temperature', `${data.seasonKey} / ${data.tempKey}`);
-      
-      output.appendChild(metrics);
-
-      // Risk assessment section
-      const riskSection = document.createElement('div');
-      riskSection.style.marginTop = '12px';
-      riskSection.innerHTML = '<strong>Risk Assessment:</strong><br>';
-      
-      const risks = data.risks;
-      const riskTypes = [
-        { key: 'bacteria', label: 'Bacterial' },
-        { key: 'chemical', label: 'Chemical' },
-        { key: 'parasite', label: 'Parasitic' },
-        { key: 'heavyMetal', label: 'Heavy Metals' },
-        { key: 'pesticide', label: 'Pesticides' },
-        { key: 'microplastic', label: 'Microplastics' }
-      ];
-      
-      riskTypes.forEach(rt => {
-        const level = getRiskLevel(risks[rt.key]);
-        const badge = document.createElement('span');
-        badge.className = `risk-badge risk-${level}`;
-        badge.textContent = `${rt.label}: ${level}`;
-        riskSection.appendChild(badge);
-      });
-      
-      output.appendChild(riskSection);
-
-      // Contaminants
-      if (data.cont && data.cont.length > 0) {
-        const contDiv = document.createElement('div');
-        contDiv.style.marginTop = '12px';
-        contDiv.innerHTML = `<strong>Detected contaminants:</strong><br>${data.cont.join(', ')}`;
-        output.appendChild(contDiv);
+  // Chart initialization
+  function initChart() {
+    const ctx = document.getElementById('mainChart');
+    state.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Before Treatment',
+          data: [],
+          borderColor: '#ff9800',
+          backgroundColor: 'rgba(255,152,0,0.1)',
+          tension: 0.4,
+          fill: false
+        }, {
+          label: 'After Treatment',
+          data: [],
+          borderColor: '#4caf50',
+          backgroundColor: 'rgba(76,175,80,0.1)',
+          tension: 0.4,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const idx = context.dataIndex;
+                if (state.history[idx]) {
+                  return `Safety: ${state.history[idx].safety}`;
+                }
+                return '';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Turbidity (NTU)' }
+          },
+          x: {
+            title: { display: true, text: 'Analysis #' }
+          }
+        }
       }
+    });
+  }
 
-      // Explanation
-      const explDiv = document.createElement('div');
-      explDiv.style.marginTop = '12px';
-      explDiv.style.fontSize = '0.9rem';
-      explDiv.style.fontStyle = 'italic';
-      explDiv.textContent = data.explanation;
-      output.appendChild(explDiv);
+  // Update chart
+  function updateChart() {
+    const labels = state.history.map((_, i) => `#${i + 1}`);
+    const before = state.history.map(r => r.before);
+    const after = state.history.map(r => r.after);
+    
+    state.chart.data.labels = labels;
+    state.chart.data.datasets[0].data = before;
+    state.chart.data.datasets[1].data = after;
+    
+    // Apply chart type
+    if (state.chartType === 'area') {
+      state.chart.data.datasets[0].fill = true;
+      state.chart.data.datasets[1].fill = true;
+    } else {
+      state.chart.data.datasets[0].fill = false;
+      state.chart.data.datasets[1].fill = false;
+    }
+    
+    state.chart.update('none');
+  }
 
-      // Treatment suggestions
-      advice.innerHTML = '';
-      if (data.suggestions && data.suggestions.length > 0) {
-        const heading = document.createElement('h3');
-        heading.style.marginTop = '0';
-        heading.textContent = 'Recommended Treatments:';
-        advice.appendChild(heading);
-        
-        const ul = document.createElement('ul');
-        ul.className = 'treatment-list';
-        ul.style.margin = '8px 0';
-        ul.style.padding = '0';
-        ul.style.listStyle = 'none';
-        
-        data.suggestions.forEach(s => {
-          const li = document.createElement('li');
-          li.className = 'treatment-item';
-          const effectiveness = Math.round(s.effectiveness * 100);
-          li.innerHTML = `<strong>${s.label}</strong> (${effectiveness}% effective)<br><span style="font-size:0.9rem">${s.desc}</span>`;
-          ul.appendChild(li);
-        });
-        
-        advice.appendChild(ul);
-        advice.style.display = 'block';
-        advice.setAttribute('aria-hidden', 'false');
+  // Toggle chart type
+  function toggleChartType(type) {
+    state.chartType = type;
+    document.querySelectorAll('[data-chart]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.chart === type);
+    });
+    updateChart();
+  }
+
+  // Anomaly detection
+  function checkAnomalies() {
+    if (state.history.length < 3) return;
+    
+    const recent = state.history.slice(-3);
+    const current = recent[2].before;
+    const prev1 = recent[1].before;
+    const prev2 = recent[0].before;
+    
+    const avgPrev = (prev1 + prev2) / 2;
+    const change = Math.abs(current - avgPrev) / avgPrev;
+    
+    const anomalyChip = document.getElementById('anomalyChip');
+    
+    if (change > 0.5) {
+      anomalyChip.innerHTML = `<span class="anomaly-badge">⚡ Anomaly Detected</span>`;
+      anomalyChip.style.display = 'block';
+      
+      if (current > avgPrev) {
+        announce('Warning: Sudden turbidity increase detected. Possible contamination event.');
       } else {
-        advice.style.display = 'none';
-        advice.setAttribute('aria-hidden', 'true');
+        announce('Note: Sudden turbidity decrease detected. Verify measurement.');
       }
-
-      // Screen reader announcement
-      const sr = document.getElementById('srAnnouncement');
-      if (sr) {
-        sr.textContent = `Analysis complete: ${data.classification}. Confidence ${data.conf} percent. Trend is ${data.trend}.`;
-        window.setTimeout(() => { sr.textContent = ''; }, 5000);
-      }
+    } else {
+      anomalyChip.style.display = 'none';
     }
+  }
 
-    /**
-     * Calculate cleanliness from depth using exponential decay
-     */
-    function cleanlinessFromDepth(depth) {
-      return Math.round(100 * Math.exp(-depth / 60));
+  // Forecast generation
+  function generateForecast() {
+    if (state.history.length < 3) {
+      alert('Need at least 3 historical analyses to generate forecast');
+      return;
     }
+    
+    const forecast = calculateForecast(state.forecastDays);
+    displayForecast(forecast);
+  }
 
-    /**
-     * Update live visualizations (charts, bottle, status)
-     */
-    function updateLive(depthPercent) {
-      const d = clamp(Math.round(depthPercent), 0, 100);
-      const c = cleanlinessFromDepth(d);
-      
-      try {
-        liveDepth.textContent = `Depth: ${d}%`;
-        liveClean.textContent = `Cleanliness: ${c}%`;
-        
-        const bottle = document.querySelector('.bottle');
-        if (bottle) {
-          bottle.style.setProperty('--fill', String(clamp(d, 0, 100)));
-        }
-        
-        const t = new Date().toLocaleTimeString();
-        safeUpdateCharts(t, d, c);
-      } catch (err) {
-        console.warn('updateLive error', err);
-      }
+  // Forecast calculation (moving average + linear trend)
+  function calculateForecast(days) {
+    const recent = state.history.slice(-7).map(r => r.before);
+    const n = recent.length;
+    
+    // Calculate trend
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (let i = 0; i < n; i++) {
+      sumX += i;
+      sumY += recent[i];
+      sumXY += i * recent[i];
+      sumX2 += i * i;
     }
-  });
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    
+    // Generate predictions
+    const predictions = [];
+    for (let i = 1; i <= days; i++) {
+      const predicted = intercept + slope * (n + i);
+      predictions.push(Math.max(0, predicted));
+    }
+    
+    return { predictions, trend: slope > 0 ? 'increasing' : 'decreasing' };
+  }
 
-  // Safe proxy for legacy calls
-  window.performAnalysis = window.performAnalysis || function () {
+  // Display forecast
+  function displayForecast(forecast) {
+    const output = document.getElementById('forecastOutput');
+    const content = document.getElementById('forecastContent');
+    
+    let html = `<p><strong>Trend:</strong> Turbidity is ${forecast.trend} over time.</p>`;
+    html += `<p><strong>${state.forecastDays}-Day Predictions:</strong></p>`;
+    html += `<ul style="list-style:none;padding:0">`;
+    
+    forecast.predictions.forEach((pred, i) => {
+      html += `<li style="padding:4px 0">Day ${i + 1}: ${pred.toFixed(1)} NTU</li>`;
+    });
+    
+    html += `</ul>`;
+    html += `<p style="font-size:0.85rem;color:var(--text-light);margin-top:12px">`;
+    html += `<em>Note: Forecast based on historical trends. Actual values may vary due to environmental factors.</em>`;
+    html += `</p>`;
+    
+    content.innerHTML = html;
+    output.setAttribute('aria-hidden', 'false');
+  }
+
+  // Set forecast days
+  function setForecastDays(days) {
+    state.forecastDays = days;
+    document.querySelectorAll('[data-forecast]').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.forecast) === days);
+    });
+  }
+
+  // Export CSV
+  function exportCSV() {
+    if (state.history.length === 0) {
+      alert('No data to export');
+      return;
+    }
+    
+    let csv = 'Timestamp,Source,Before (NTU),After (NTU),Reduction (%),Safety,Confidence (%),Risk Score\n';
+    
+    state.history.forEach(r => {
+      const date = new Date(r.timestamp).toISOString();
+      csv += `${date},${r.source},${r.before},${r.after},${r.reduction},${r.safety},${r.confidence},${r.riskScore}\n`;
+    });
+    
+    downloadFile(csv, 'senimsu_analysis.csv', 'text/csv');
+  }
+
+  // Export PNG
+  function exportPNG() {
+    if (!state.chart) return;
+    
+    const url = state.chart.toBase64Image();
+    const link = document.createElement('a');
+    link.download = 'senimsu_chart.png';
+    link.href = url;
+    link.click();
+  }
+
+  // Download file helper
+  function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Clear history
+  function clearHistory() {
+    if (!confirm('Clear all analysis history? This cannot be undone.')) return;
+    
+    state.history = [];
+    saveData();
+    updateChart();
+    updateUI();
+    
+    document.getElementById('output').setAttribute('aria-hidden', 'true');
+    document.getElementById('advice').setAttribute('aria-hidden', 'true');
+    document.getElementById('confidenceMeterContainer').style.display = 'none';
+    document.getElementById('anomalyChip').style.display = 'none';
+    
+    announce('History cleared');
+  }
+
+  // Theme toggle
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem(THEME_KEY, next);
+  }
+
+  // Load theme
+  function loadTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }
+
+  // Save data
+  function saveData() {
     try {
-      const btn = document.getElementById('analyzeBtn');
-      if (btn) btn.click();
-    } catch (e) { 
-      console.error('performAnalysis proxy failed', e); 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        history: state.history,
+        source: state.source,
+        chartType: state.chartType,
+        forecastDays: state.forecastDays
+      }));
+    } catch (e) {
+      console.error('Failed to save data:', e);
     }
-  };
+  }
 
+  // Load data
+  function loadData() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        state.history = data.history || [];
+        state.source = data.source;
+        state.chartType = data.chartType || 'line';
+        state.forecastDays = data.forecastDays || 7;
+      }
+    } catch (e) {
+      console.error('Failed to load data:', e);
+    }
+  }
+
+  // Update UI from state
+  function updateUI() {
+    if (state.source) {
+      selectSource(state.source);
+    }
+    if (state.history.length > 0) {
+      updateChart();
+    }
+  }
+
+  // Show/hide spinner
+  function showSpinner(show) {
+    document.getElementById('analysisSpinner').style.display = show ? 'inline-block' : 'none';
+  }
+
+  // Announce to screen readers
+  function announce(msg) {
+    const sr = document.getElementById('srAnnouncement');
+    sr.textContent = msg;
+    setTimeout(() => sr.textContent = '', 1000);
+  }
+
+  // Start app
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>
 </body>
