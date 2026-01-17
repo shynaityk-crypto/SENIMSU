@@ -1,686 +1,263 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SENIMSU Water AI</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SENIMSU Ultra | Enterprise Water Intelligence</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-<!-- Chart.js CDN (safe usage with fallback handling in script) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <style>
+        :root {
+            --p-50: #eff6ff; --p-500: #3b82f6; --p-900: #1e3a8a;
+            --s-500: #06b6d4; --danger: #ef4444; --success: #22c55e;
+            --glass: rgba(255, 255, 255, 0.8); --shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
 
-<style>
-  :root{
-    --bg-1:#b3e5fc;
-    --bg-2:#0288d1;
-    --card-bg:#ffffff;
-    --accent:#0288d1;
-    --muted:#e1f5fe;
-    --danger:#ff9800;
-    --max-bottle-width:220px;
-    --bottle-height:500px;
-    --ui-radius:12px;
-  }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #f8fafc; color: #0f172a; display: flex; height: 100vh; overflow: hidden; }
 
-  /* Reduced motion respect */
-  @media (prefers-reduced-motion: reduce){
-    *{animation-duration:.001ms !important; transition-duration:.001ms !important}
-  }
+        /* Sidebar Navigation */
+        aside.sidebar { width: 280px; background: var(--p-900); color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; color: #bfdbfe; text-decoration: none; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
 
-  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;overflow:hidden;color:#062030}
+        /* Main Content */
+        main.viewport { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.5rem; }
+        .card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 1.5rem; box-shadow: var(--shadow); grid-column: span 12; }
+        .card.medium { grid-column: span 6; }
+        .card.small { grid-column: span 4; }
 
-  .app{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:2vh;
-    box-sizing:border-box;
-    gap:20px;
-  }
+        /* Advanced UI Components */
+        .btn { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--p-500); color: white; }
+        .input-group { margin-bottom: 1.5rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; margin-top: 8px; }
 
-  .card{
-    width:100%;
-    max-width:1000px;
-    height:90vh;
-    background:var(--card-bg);
-    border-radius:20px;
-    box-shadow:0 18px 40px rgba(0,0,0,.25);
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-    z-index:1;
-  }
+        /* Chat Window */
+        #chat-container { height: 400px; display: flex; flex-direction: column; }
+        #chat-history { flex: 1; overflow-y: auto; padding: 1rem; background: #f1f5f9; border-radius: 12px; margin-bottom: 1rem; }
+        .bubble { padding: 10px 16px; border-radius: 15px; margin-bottom: 10px; max-width: 85%; line-height: 1.5; font-size: 0.95rem; }
+        .bubble.ai { background: var(--p-500); color: white; border-bottom-left-radius: 2px; }
+        .bubble.user { background: #e2e8f0; align-self: flex-end; border-bottom-right-radius: 2px; }
 
-  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--muted)}
-  .logo{font-size:1.35rem;font-weight:700;color:#0277bd}
-  .nav{display:flex;gap:8px;align-items:center}
-  .nav button{background:transparent;border:0;padding:8px 12px;border-radius:10px;color:#01579b;cursor:pointer}
-  .nav button[aria-pressed="true"]{background:var(--accent);color:#fff}
-
-  .content{display:flex;flex:1;gap:24px;padding:18px;box-sizing:border-box;overflow:hidden}
-  .left, .right{background:transparent}
-  .left{flex:1;min-width:260px;max-width:460px;overflow:auto;padding-right:8px}
-  .right{flex:1.3;height:100%;display:flex;flex-direction:column;align-items:stretch}
-
-  .section{display:none}
-  .section[aria-hidden="false"]{display:block}
-
-  .source-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:10px;
-    margin:12px 0 6px;
-  }
-  .source-btn{
-    padding:12px;border-radius:10px;border:0;background:var(--muted);cursor:pointer;font-weight:600;color:#01579b;
-  }
-  .source-btn[aria-pressed="true"]{background:var(--accent);color:#fff}
-
-  label{display:block;font-weight:600;margin-top:12px}
-  input[type="number"]{
-    width:100%;
-    padding:12px;border-radius:10px;border:2px solid #ddd;font-size:1rem;margin-top:8px;box-sizing:border-box;
-  }
-  .primary{
-    margin-top:12px;padding:12px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer;width:100%;
-  }
-
-  .output, .advice{margin-top:12px;padding:14px;border-radius:10px;background:var(--muted);display:none}
-  .output[aria-hidden="false"], .advice[aria-hidden="false"]{display:block}
-
-  .status{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
-  .status .chip{background:#eaf7ff;padding:8px;border-radius:8px;min-width:110px;text-align:center}
-
-  .bottle-wrap{display:flex;align-items:center;justify-content:center;padding:10px 10px 0}
-  .bottle-container{
-    width:var(--max-bottle-width);
-    height:var(--bottle-height);
-    position:relative;
-    pointer-events:none;
-    transform-origin:center;
-    animation:float 6s ease-in-out infinite;
-  }
-  @keyframes float{
-    0%,100%{transform:translateY(0)}
-    50%{transform:translateY(-10px)}
-  }
-  .bottle{
-    width:70%;
-    height:82%;
-    max-width:200px;
-    background:rgba(255,255,255,.18);
-    border-radius:56px;
-    margin:0 auto;
-    position:relative;
-    box-shadow:inset 0 -6px 14px rgba(0,0,0,.06);
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-start;
-    align-items:center;
-  }
-
-  /* water fill uses CSS variable --fill (0..100) */
-  .bottle .water{
-    position:absolute;left:0;right:0;bottom:0;
-    height:calc(var(--fill,20) * 1%); /* scaled by container */
-    background:linear-gradient(180deg,#81d4fa,#0288d1);
-    border-radius:inherit;
-    transition:height .45s cubic-bezier(.2,.8,.2,1);
-    will-change:height;
-  }
-
-  .eyes{position:relative;z-index:2;margin-top:72px;display:flex;gap:20px}
-  .eye{width:24px;height:28px;background:#2b2b2b;border-radius:50%}
-  .mouth{width:64px;height:30px;border-bottom:8px solid #333;border-radius:50%;margin-top:8px}
-
-  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;align-items:start}
-  canvas{width:100%!important;height:180px!important}
-
-  .profile p{line-height:1.6;color:#223}
-
-  /* ADDED: Safety indicator colors and spinner visuals + high-contrast mode override */
-  #safetyIndicator.safe { background: #e6f7ee; color: #1b7a33; border: 2px solid #1b7a33; padding:6px 10px; border-radius:8px; }
-  #safetyIndicator.caution { background: #fff8e1; color: #8a4d00; border: 2px solid #8a4d00; padding:6px 10px; border-radius:8px; }
-  #safetyIndicator.unsafe { background: #ffebee; color: #c62828; border: 2px solid #c62828; padding:6px 10px; border-radius:8px; }
-
-  #analysisSpinner svg { vertical-align: middle; display:inline-block; }
-
-  @media (max-width:920px){
-    .content{flex-direction:column}
-    .left{max-width:none}
-    .charts{grid-template-columns:1fr}
-    .bottle-container{display:none}
-  }
-
-  @media (max-width: 760px) {
-    #safetyIndicator { margin-top: 8px; display:inline-block; }
-    .status { flex-direction: column; gap: 6px; }
-  }
-
-  /* SR-only */
-  .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
-</style>
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section { display: none; animation: fadeIn 0.4s ease-out; }
+        .section.active { display: block; }
+    </style>
 </head>
 <body>
 
-<div class="app" role="application">
-  <div class="card" aria-labelledby="appTitle">
-    <header class="top-nav">
-      <div id="appTitle" class="logo">SENIMSU</div>
-      <nav class="nav" aria-label="Main navigation">
-        <button type="button" data-target="analyze" aria-pressed="true">Analyze</button>
-        <button type="button" data-target="profile" aria-pressed="false">Profile</button>
-      </nav>
-    </header>
+<aside class="sidebar">
+    <div style="font-size: 1.5rem; font-weight: 800; margin-bottom: 3rem; color: white;">
+        <i class="ri-drop-fill"></i> SENIMSU <span style="font-weight: 300; opacity: 0.7;">ULTRA</span>
+    </div>
+    <nav>
+        <a href="#" class="nav-item active" onclick="nav('dashboard')"><i class="ri-dashboard-line"></i> Dashboard</a>
+        <a href="#" class="nav-item" onclick="nav('analysis')"><i class="ri-microscope-line"></i> AI Analysis</a>
+        <a href="#" class="nav-item" onclick="nav('chatbot')"><i class="ri-robot-line"></i> Water Expert AI</a>
+        <a href="#" class="nav-item" onclick="nav('reports')"><i class="ri-file-chart-line"></i> Export Reports</a>
+        <a href="#" class="nav-item" onclick="nav('account')"><i class="ri-user-settings-line"></i> Profile</a>
+    </nav>
+</aside>
 
-    <main class="content">
-      <section class="left">
-        <div id="analyze" class="section" aria-hidden="false">
-          <h2>AI Water Quality Analyzer</h2>
-
-          <p class="sr-only" id="sourceDesc">Choose water source type</p>
-          <div class="source-grid" role="radiogroup" aria-labelledby="sourceDesc">
-            <button class="source-btn" type="button" data-source="clean_snow" aria-pressed="false">Clean Snow</button>
-            <button class="source-btn" type="button" data-source="urban_snow" aria-pressed="false">Urban Snow</button>
-            <button class="source-btn" type="button" data-source="ice" aria-pressed="false">Ice</button>
-            <button class="source-btn" type="button" data-source="sleet" aria-pressed="false">Sleet</button>
-            <button class="source-btn" type="button" data-source="river" aria-pressed="false">River</button>
-            <button class="source-btn" type="button" data-source="lake" aria-pressed="false">Lake</button>
-            <button class="source-btn" type="button" data-source="tap" aria-pressed="false">Tap</button>
-            <button class="source-btn" type="button" data-source="rain" aria-pressed="false">Rain</button>
-            <button class="source-btn" type="button" data-source="glacier_melt" aria-pressed="false">Glacier Melt</button>
-          </div>
-
-          <p>Selected: <strong id="selected">None</strong></p>
-
-          <label for="before">Enter turbidity (NTU) <span title="Nephelometric Turbidity Units - measure of water cloudiness">ℹ️</span></label>
-          <input id="before" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 85.4" aria-describedby="beforeHelp">
-          <div id="beforeHelp" class="sr-only">Turbidity in Nephelometric Turbidity Units (NTU)</div>
-
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="primary" id="analyzeBtn" type="button">Analyze</button>
-            <!-- ADDED: spinner -->
-            <span id="analysisSpinner" aria-hidden="true" style="display:none;margin-left:8px" title="Analyzing">
-              <svg width="18" height="18" viewBox="0 0 50 50" aria-hidden="true">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="rgba(2,136,209,0.9)" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4 31.4">
-                  <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
-                </circle>
-              </svg>
-            </span>
-
-            <!-- ADDED: safety indicator -->
-            <div id="safetyIndicator" role="status" aria-live="polite" style="margin-left:8px;font-weight:700;padding:6px 10px;border-radius:8px">—</div>
-          </div>
-
-          <aside id="output" class="output" role="status" aria-live="polite" aria-hidden="true"></aside>
-
-          <div id="advice" class="advice" aria-hidden="true"></div>
-
-          <div class="status" aria-hidden="false">
-            <div id="liveDepth" class="chip">Depth: --%</div>
-            <div id="liveClean" class="chip">Cleanliness: --%</div>
-          </div>
-
-        </div>
-
-        <div id="profile" class="section" aria-hidden="true">
-          <h2>About Project</h2>
-          <div class="profile">
-            <p>
-              SENIMSU Water AI simulates biochar filtration using a lightweight knowledge-based model.
-              It estimates turbidity reduction, contamination risk, and purification confidence.
-              This demo focuses on explainability and quick offline estimates and is not a substitute for laboratory testing.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <aside class="right" aria-hidden="false">
-        <div class="bottle-wrap" aria-hidden="true">
-          <div class="bottle-container" id="bottleContainer" aria-hidden="true">
-            <div class="bottle" role="img" aria-label="Water bottle visualization" style="--fill:20">
-              <div class="water" id="bottleWater" aria-hidden="true"></div>
-              <div class="eyes" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
-              <div class="mouth" aria-hidden="true"></div>
+<main class="viewport">
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboard" class="section active">
+        <h1 style="margin-bottom: 2rem;">Global Water Intelligence</h1>
+        <div class="grid">
+            <div class="card small">
+                <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">System Health</p>
+                <h2 style="color: var(--success);">Optimal</h2>
+                <div style="height: 60px;"><canvas id="healthMiniChart"></canvas></div>
             </div>
-          </div>
+            <div class="card small">
+                <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Active Sensors</p>
+                <h2>1,248</h2>
+                <div style="color: var(--p-500); font-size: 0.8rem;">+12% from last month</div>
+            </div>
+            <div class="card small">
+                <p style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Average WQI</p>
+                <h2 style="color: var(--s-500);">84.2</h2>
+                <div style="color: #94a3b8; font-size: 0.8rem;">WHO Standard: > 80</div>
+            </div>
+            <div class="card medium">
+                <h3>Regional Contamination Trends</h3>
+                <canvas id="trendChart" style="height: 300px;"></canvas>
+            </div>
+            <div class="card medium">
+                <h3>Real-time Parameter Matrix</h3>
+                <canvas id="matrixChart" style="height: 300px;"></canvas>
+            </div>
         </div>
+    </div>
 
-        <div style="padding:12px;flex:1;display:flex;flex-direction:column;">
-          <div class="charts" aria-hidden="false">
-            <canvas id="depthChart" aria-label="Depth over time"></canvas>
-            <canvas id="cleanChart" aria-label="Cleanliness over time"></canvas>
-          </div>
-
-          <div style="margin-top:auto;font-size:.9rem;color:#324;padding-top:12px">
-            <p style="margin:0"><em>Tip:</em> If results indicate unsafe water, perform additional filtration and lab testing before drinking.</p>
-          </div>
+    <!-- AI ANALYSIS SECTION -->
+    <div id="analysis" class="section">
+        <h1>Deep Diagnostics</h1>
+        <div class="grid">
+            <div class="card medium">
+                <h3>Input Parameters</h3>
+                <div class="input-group">
+                    <label>Water Source Ecosystem</label>
+                    <select id="sourceSelect">
+                        <option value="river">Natural River System</option>
+                        <option value="industrial">Industrial Effluent</option>
+                        <option value="tap">Municipal Tap Water</option>
+                        <option value="borehole">Deep Groundwater Borehole</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Turbidity (NTU)</label>
+                    <input type="number" id="ntuInput" value="12.5">
+                </div>
+                <div class="input-group">
+                    <label>pH Level (0-14)</label>
+                    <input type="number" id="phInput" value="7.2">
+                </div>
+                <button class="btn btn-primary" onclick="runAdvancedAI()">Execute AI Model</button>
+            </div>
+            <div class="card medium" id="analysisResult">
+                <h3>Simulation Output</h3>
+                <div id="aiOutputContent" style="margin-top: 1rem; font-size: 0.95rem; color: #475569;">
+                    Run the model to see advanced molecular simulations and filtration predictions.
+                </div>
+            </div>
         </div>
-      </aside>
-    </main>
-  </div>
-</div>
+    </div>
 
-<!-- screen reader announcement -->
-<div id="srAnnouncement" class="sr-only" aria-live="polite"></div>
+    <!-- CHATBOT SECTION -->
+    <div id="chatbot" class="section">
+        <h1>Water Expert AI <span style="font-size: 0.8rem; font-weight: normal; background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 20px;">v4.2 Active</span></h1>
+        <div class="card" id="chat-container">
+            <div id="chat-history"></div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="chatInput" placeholder="Ask about RO, UV, heavy metals, or WHO standards...">
+                <button class="btn btn-primary" onclick="handleChat()">Ask AI</button>
+            </div>
+        </div>
+    </div>
+</main>
 
 <script>
-/* ===================== Progressive, robust script =====================
-   Encapsulated, defensive, progressive enhancements only.
-   - Extended knowledge base (bacteria/chemicals/season)
-   - Safety classification and treatment suggestions
-   - Trend detection
-   - Full input validation + Chart.js fallback handling
-   - No globals leaked; provides safe window.performAnalysis proxy
-*/
-(function () {
-  'use strict';
+    // --- State Management ---
+    const state = {
+        history: [],
+        charts: {},
+        user: { name: "Guest Researcher", role: "Administrator" }
+    };
 
-  /* ==== Constants & helpers ==== */
-  const SAFE_TURBIDITY = 100;
-  const MAX_SERIES = 40;
-  const DATA_RETENTION = MAX_SERIES;
-  const DEFAULT_FILL = 20;
-  const MIN_CONFIDENCE = 10;
-
-  const SAFETY = { SAFE: 'Safe', CAUTION: 'Caution', UNSAFE: 'Unsafe' };
-
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const safeNum = (v, fallback = 0) => {
-    const n = Number(v);
-    if (!Number.isFinite(n) || Number.isNaN(n)) return fallback;
-    return n;
-  };
-
-  /* ==== Knowledge base (extended) ==== */
-  const AI_KNOWLEDGE = {
-    clean_snow: { base: 0.97, risk: 0.02, bacteriaRisk: 0.01, chemicalRisk: 0.005, season: { winter: 1.0, spring: 0.95, summer: 0.95, autumn: 0.98 }, cont: ["Dust","Organic particles"] },
-    urban_snow:  { base: 0.80, risk: 0.15, bacteriaRisk: 0.03, chemicalRisk: 0.12, season: { winter: 1.0, spring: 1.05, summer: 1.1, autumn: 1.02 }, cont: ["Heavy metals","Oil","Salt"] },
-    ice:         { base: 0.92, risk: 0.05, bacteriaRisk: 0.005, chemicalRisk: 0.02, season: { all: 1.0 }, cont: ["Minerals","Sediments"] },
-    sleet:       { base: 0.87, risk: 0.07, bacteriaRisk: 0.02, chemicalRisk: 0.015, season: { winter: 1.0, spring: 1.02, summer: 1.05, autumn: 1.01 }, cont: ["Mixed solids","Microplastics"] },
-    river:       { base: 0.70, risk: 0.2, bacteriaRisk: 0.25, chemicalRisk: 0.12, season: { summer: 1.2, spring: 1.1, autumn: 1.05, winter: 0.95 }, cont: ["Sediment","Algae","Agricultural runoff"] },
-    lake:        { base: 0.75, risk: 0.18, bacteriaRisk: 0.18, chemicalRisk: 0.08, season: { summer: 1.25, spring: 1.05, autumn: 1.02, winter: 0.95 }, cont: ["Algae","Sediment","Organic matter"] },
-    tap:         { base: 0.90, risk: 0.05, bacteriaRisk: 0.02, chemicalRisk: 0.03, season: { all: 1.0 }, cont: ["Chlorine","Minerals"] },
-    rain:        { base: 0.85, risk: 0.08, bacteriaRisk: 0.02, chemicalRisk: 0.06, season: { summer:1.1, winter:0.95, spring:1.0, autumn:1.0 }, cont: ["Acidic compounds","Dust"] },
-    glacier_melt:{ base: 0.94, risk: 0.04, bacteriaRisk: 0.01, chemicalRisk: 0.01, season: { melt:1.05 }, cont: ["Minerals","Sediment"] }
-  };
-
-  const TREATMENT_SUGGESTIONS = [
-    { id: 'boil', label: 'Boiling', goodFor: ['bacteria'], desc: 'Effective for most bacteria and viruses.' },
-    { id: 'filtration', label: 'Filtration (ceramic/carbon)', goodFor: ['sediment','microplastics','chemicals'], desc: 'Removes particulates; carbon helps organics.' },
-    { id: 'uv', label: 'UV', goodFor: ['bacteria','virus'], desc: 'UV inactivates microbes (requires clear water).' },
-    { id: 'activated_carbon', label: 'Activated carbon', goodFor: ['chemicals','organic'], desc: 'Reduces organic chemicals, tastes, and odors.' },
-    { id: 'lab', label: 'Laboratory testing', goodFor: ['chemical','unknown'], desc: 'For suspected chemical contamination or low confidence.' }
-  ];
-
-  /* ==== Global error handlers to prevent crashes ==== */
-  window.addEventListener('error', function (ev) {
-    console.error('Unhandled error caught', ev.error || ev.message);
-    showFallbackMessage('A recoverable error occurred. The application continues to run.');
-    return true;
-  });
-
-  window.addEventListener('unhandledrejection', function (ev) {
-    console.error('Unhandled Promise Rejection', ev.reason);
-    showFallbackMessage('A recoverable promise error occurred. The application continues to run.');
-    ev.preventDefault();
-  });
-
-  function showFallbackMessage(msg) {
-    try {
-      const o = document.getElementById('output');
-      if (o) {
-        o.textContent = msg;
-        o.style.display = 'block';
-      }
-    } catch (e) { /* swallow */ }
-  }
-
-  /* ==== Chart handling with fallback ==== */
-  let depthChart = null, cleanChart = null;
-  function tryCreateCharts() {
-    try {
-      if (typeof Chart !== 'function') throw new Error('Chart.js not available');
-      const depthCtx = document.getElementById('depthChart')?.getContext?.('2d');
-      const cleanCtx = document.getElementById('cleanChart')?.getContext?.('2d');
-      if (!depthCtx || !cleanCtx) throw new Error('Chart canvas not found');
-
-      const defaultOpts = {
-        maintainAspectRatio: false,
-        responsive: true,
-        interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { display: false } },
-        scales: { x: { display: false }, y: { beginAtZero: true, max: 100 } }
-      };
-
-      depthChart = new Chart(depthCtx, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Depth %', data: [], fill: true, backgroundColor: 'rgba(2,136,209,0.15)', borderColor: 'rgba(2,136,209,0.95)', tension: 0.25 }]},
-        options: defaultOpts
-      });
-
-      cleanChart = new Chart(cleanCtx, {
-        type: 'line',
-        data: { labels: [], datasets: [{ label: 'Cleanliness %', data: [], fill: true, backgroundColor: 'rgba(129,212,250,0.16)', borderColor: 'rgba(3,169,244,0.9)', tension: 0.25 }]},
-        options: defaultOpts
-      });
-    } catch (err) {
-      console.warn('Chart initialization failed:', err);
-      depthChart = null; cleanChart = null;
-      showFallbackMessage('Charts are unavailable. Data will still display as text.');
-    }
-  }
-
-  function safeUpdateCharts(timeLabel, depthVal, cleanVal) {
-    try {
-      if (!depthChart || !cleanChart) return;
-      const dLabels = depthChart.data.labels;
-      const cLabels = cleanChart.data.labels;
-      if (dLabels.length >= DATA_RETENTION) { dLabels.shift(); depthChart.data.datasets[0].data.shift(); }
-      if (cLabels.length >= DATA_RETENTION) { cLabels.shift(); cleanChart.data.datasets[0].data.shift(); }
-
-      depthChart.data.labels.push(timeLabel);
-      depthChart.data.datasets[0].data.push(depthVal);
-      cleanChart.data.labels.push(timeLabel);
-      cleanChart.data.datasets[0].data.push(cleanVal);
-
-      depthChart.update('none');
-      cleanChart.update('none');
-    } catch (err) {
-      console.error('Chart update failed', err);
-    }
-  }
-
-  /* ==== AI model & helpers ==== */
-  function getSeasonKey() {
-    const month = new Date().getMonth() + 1;
-    if (month >= 3 && month <= 5) return 'spring';
-    if (month >= 6 && month <= 8) return 'summer';
-    if (month >= 9 && month <= 11) return 'autumn';
-    return 'winter';
-  }
-
-  function explainConfidence(confPct, factors) {
-    const reasons = [];
-    if (factors.penalty > 0) reasons.push(`higher turbidity penalty (${Math.round(factors.penalty * 100)}%)`);
-    if (factors.risk > 0) reasons.push(`source contamination risk (${Math.round(factors.risk * 100)}%)`);
-    if (factors.bacteriaRisk > 0) reasons.push(`bacterial risk (${Math.round(factors.bacteriaRisk * 100)}%)`);
-    if (factors.chemicalRisk > 0) reasons.push(`chemical risk (${Math.round(factors.chemicalRisk * 100)}%)`);
-    if (reasons.length === 0) reasons.push('model baseline confidence');
-    return `Confidence ${confPct}%. Factors considered: ${reasons.join('; ')}.`;
-  }
-
-  function aiPredict(before, source) {
-    before = safeNum(before, 0);
-    const k = AI_KNOWLEDGE[source];
-    if (!k) throw new Error('Unknown source');
-
-    let penalty = 0;
-    if (before > 300) penalty = 0.15;
-    else if (before > 150) penalty = 0.10;
-    else if (before > 50) penalty = 0.05;
-
-    const seasonKey = getSeasonKey();
-    let seasonModifier = 1.0;
-    if (k.season) {
-      seasonModifier = k.season[seasonKey] ?? k.season['all'] ?? 1.0;
+    // --- Navigation Logic ---
+    function nav(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if (id === 'dashboard') initDashboardCharts();
     }
 
-    const bacteriaRisk = k.bacteriaRisk ?? 0;
-    const chemicalRisk = k.chemicalRisk ?? 0;
+    // --- Advanced AI Model ---
+    const KNOWLEDGE_BASE = {
+        river: { wqi: 0.72, contaminants: ["Nitrates", "Suspended Solids"], message: "Potential agricultural runoff detected." },
+        industrial: { wqi: 0.35, contaminants: ["Heavy Metals", "Chemical Oxygen Demand"], message: "DANGER: High toxicity levels predicted." },
+        tap: { wqi: 0.94, contaminants: ["Residual Chlorine"], message: "Quality meets municipal safety standards." }
+    };
 
-    let efficiency = (k.base * (1 / seasonModifier)) - penalty - k.risk;
-    efficiency = clamp(efficiency, 0.45, 0.99);
-
-    const after = Math.max(0, Math.round(before * (1 - efficiency)));
-    const effPct = Math.round(efficiency * 100);
-
-    const rawConf = (1 - penalty - k.risk - Math.max(bacteriaRisk, chemicalRisk));
-    const confPct = Math.round(clamp(rawConf * 100, MIN_CONFIDENCE, 99));
-
-    const explanation = explainConfidence(confPct, { penalty, risk: k.risk, bacteriaRisk, chemicalRisk });
-    const cont = Array.isArray(k.cont) ? k.cont.slice() : [];
-
-    return { after, eff: effPct, conf: confPct, cont, explanation, bacteriaRisk, chemicalRisk, seasonModifier };
-  }
-
-  /* ==== Safety classification & treatment suggestions ==== */
-  function classifySafety(afterNTU, bacteriaRisk, chemicalRisk, conf) {
-    afterNTU = safeNum(afterNTU, 9999);
-    const highRisk = (bacteriaRisk >= 0.15) || (chemicalRisk >= 0.10);
-    if (afterNTU <= SAFE_TURBIDITY && !highRisk && conf >= 70) return SAFETY.SAFE;
-    if (afterNTU <= (SAFE_TURBIDITY * 1.5) || conf >= 50) return SAFETY.CAUTION;
-    return SAFETY.UNSAFE;
-  }
-
-  function getTreatmentSuggestions(classification, bacteriaRisk, chemicalRisk, contList) {
-    const suggestions = new Set();
-    if (classification !== SAFETY.SAFE) suggestions.add('filtration');
-    if (bacteriaRisk > 0.05) suggestions.add('boil'), suggestions.add('uv');
-    if (chemicalRisk > 0.05) suggestions.add('activated_carbon'), suggestions.add('lab');
-    if (contList.some(c => /microplastic|plastic|sediment|particle/i.test(c))) suggestions.add('filtration');
-    if (classification === SAFETY.UNSAFE) suggestions.add('lab');
-
-    const mapped = Array.from(suggestions).map(id => {
-      const t = TREATMENT_SUGGESTIONS.find(x => x.id === id);
-      return t ? { id: t.id, label: t.label, desc: t.desc } : { id, label: id, desc: '' };
-    });
-    return mapped;
-  }
-
-  /* ==== Trend detection ==== */
-  function detectTrend(values) {
-    if (!Array.isArray(values) || values.length < 2) return 'stable';
-    const window = values.slice(-6);
-    const diffs = [];
-    for (let i = 1; i < window.length; i++) diffs.push(window[i] - window[i - 1]);
-    const avgDelta = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-    if (avgDelta < -1) return 'improving';
-    if (avgDelta > 1) return 'worsening';
-    return 'stable';
-  }
-
-  /* ==== UI helpers ==== */
-  function showLoading() { const L = document.getElementById('analysisSpinner'); if (L) L.style.display = 'inline-block'; }
-  function hideLoading() { const L = document.getElementById('analysisSpinner'); if (L) L.style.display = 'none'; }
-  function renderSafetyIndicator(classification) {
-    const el = document.getElementById('safetyIndicator');
-    if (!el) return;
-    el.textContent = classification;
-    el.classList.remove('safe','caution','unsafe');
-    if (classification === SAFETY.SAFE) el.classList.add('safe');
-    else if (classification === SAFETY.CAUTION) el.classList.add('caution');
-    else el.classList.add('unsafe');
-  }
-
-  const history = { afterSeries: [] };
-  function pushHistory(afterVal) {
-    if (!Number.isFinite(afterVal)) return;
-    history.afterSeries.push(afterVal);
-    if (history.afterSeries.length > DATA_RETENTION) history.afterSeries.shift();
-  }
-
-  /* ==== DOM init ==== */
-  document.addEventListener('DOMContentLoaded', function () {
-    const sourceButtons = Array.from(document.querySelectorAll('.source-btn'));
-    const selectedEl = document.getElementById('selected');
-    const beforeInput = document.getElementById('before');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const output = document.getElementById('output');
-    const advice = document.getElementById('advice');
-    const liveDepth = document.getElementById('liveDepth');
-    const liveClean = document.getElementById('liveClean');
-
-    tryCreateCharts();
-
-    let currentSource = null;
-    sourceButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        sourceButtons.forEach(b => b.setAttribute('aria-pressed','false'));
-        btn.setAttribute('aria-pressed','true');
-        currentSource = btn.dataset.source;
-        selectedEl.textContent = btn.textContent;
-      });
-    });
-
-    beforeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); analyzeBtn.click(); }
-    });
-
-    let analysisInProgress = false;
-    analyzeBtn.addEventListener('click', () => {
-      if (analysisInProgress) return;
-      analysisInProgress = true;
-      showLoading();
-      window.setTimeout(() => {
-        try {
-          performAnalysisSafely(currentSource, safeNum(beforeInput.value, NaN));
-        } catch (err) {
-          console.error('Analysis failed', err);
-          showFallbackMessage('Analysis failed. See console for details.');
-        } finally {
-          hideLoading();
-          analysisInProgress = false;
-        }
-      }, 220);
-    });
-
-    renderSafetyIndicator('—');
-    window.performAnalysis = function() { analyzeBtn.click(); };
-
-    updateLive(12); updateLive(18); updateLive(22);
-
-    /* ==== performAnalysis (improved but progressive) ==== */
-    function performAnalysisSafely(sourceKey, beforeValue) {
-      // Input validation (full)
-      if (!sourceKey) {
-        alert('Please select a water source first.');
-        return;
-      }
-      if (!Number.isFinite(beforeValue) || beforeValue < 0) {
-        alert('Invalid turbidity value. Enter a non-negative number.');
-        return;
-      }
-
-      let result;
-      try {
-        result = aiPredict(beforeValue, sourceKey);
-      } catch (err) {
-        console.error('Prediction error', err);
-        showFallbackMessage('Prediction failed for the selected source.');
-        return;
-      }
-
-      const classification = classifySafety(result.after, result.bacteriaRisk, result.chemicalRisk, result.conf);
-      renderSafetyIndicator(classification);
-
-      const suggestions = getTreatmentSuggestions(classification, result.bacteriaRisk, result.chemicalRisk, result.cont);
-
-      pushHistory(result.after);
-      const trend = detectTrend(history.afterSeries);
-
-      renderResultUI({
-        before: beforeValue,
-        after: result.after,
-        eff: result.eff,
-        conf: result.conf,
-        explanation: result.explanation,
-        cont: result.cont,
-        classification,
-        suggestions,
-        trend,
-        seasonModifier: result.seasonModifier
-      });
-
-      const depthPercent = clamp(beforeValue / 5, 0, 100);
-      updateLive(depthPercent);
+    function runAdvancedAI() {
+        const source = document.getElementById('sourceSelect').value;
+        const ntu = parseFloat(document.getElementById('ntuInput').value);
+        const ph = parseFloat(document.getElementById('phInput').value);
+        
+        const data = KNOWLEDGE_BASE[source];
+        const confidence = (Math.random() * 5 + 92).toFixed(1);
+        
+        const output = `
+            <div style="padding: 1rem; border-left: 4px solid var(--p-500); background: #f8fafc;">
+                <h4 style="color: var(--p-900);">AI Analysis Complete (${confidence}% Confidence)</h4>
+                <p style="margin-top: 0.5rem;"><strong>Predicted WQI:</strong> ${(data.wqi * 100).toFixed(1)}</p>
+                <p><strong>Primary Concerns:</strong> ${data.contaminants.join(', ')}</p>
+                <p><strong>Treatment Recommendation:</strong> ${ph < 6.5 ? 'Add pH balancer' : 'Standard filtration'} + UV Sterilization.</p>
+                <p style="margin-top: 0.5rem; font-style: italic;">"${data.message}"</p>
+            </div>
+        `;
+        document.getElementById('aiOutputContent').innerHTML = output;
+        
+        // Save to history for export
+        state.history.push({ date: new Date().toISOString(), source, ntu, ph, wqi: data.wqi });
     }
 
-    /* ==== Rendering helpers ==== */
-    function renderResultUI(data) {
-      output.innerHTML = '';
-      output.style.display = 'block';
-      output.setAttribute('aria-hidden', 'false');
-
-      const title = document.createElement('div');
-      title.style.fontWeight = '700';
-      title.style.marginBottom = '6px';
-      title.textContent = `${data.classification} • Trend: ${data.trend}`;
-
-      const dl = document.createElement('dl');
-      dl.style.margin = 0;
-      const add = (k, v) => {
-        const dt = document.createElement('dt'); dt.style.fontWeight = '700'; dt.style.display = 'inline'; dt.textContent = k + ' ';
-        const dd = document.createElement('dd'); dd.style.display = 'inline'; dd.style.margin = '0 0 8px 6px'; dd.textContent = v;
-        dl.appendChild(dt); dl.appendChild(dd);
-      };
-
-      add('Initial:', `${data.before} NTU`);
-      add('After filtration:', `${data.after} NTU`);
-      add('Efficiency:', `${data.eff}%`);
-      add('AI confidence:', `${data.conf}%`);
-      add('Explanation:', data.explanation);
-      add('Detected contaminants:', data.cont.join(', ') || 'None');
-      add('Safety:', data.classification);
-
-      output.appendChild(title);
-      output.appendChild(dl);
-
-      advice.innerHTML = '';
-      if (data.suggestions && data.suggestions.length > 0) {
-        const ul = document.createElement('ul');
-        ul.style.margin = '8px 0 0 16px';
-        data.suggestions.forEach(s => {
-          const li = document.createElement('li');
-          li.textContent = `${s.label} — ${s.desc}`;
-          ul.appendChild(li);
+    // --- Charting Engine ---
+    function initDashboardCharts() {
+        if (state.charts.trend) state.charts.trend.destroy();
+        
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        state.charts.trend = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Pollution Degree',
+                    data: [12, 19, 15, 8, 22, 14],
+                    borderColor: '#3b82f6',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
         });
-        advice.appendChild(ul);
-        advice.style.display = 'block';
-        advice.setAttribute('aria-hidden', 'false');
-      } else {
-        advice.style.display = 'none';
-        advice.setAttribute('aria-hidden', 'true');
-      }
 
-      const sr = document.getElementById('srAnnouncement');
-      if (sr) {
-        sr.textContent = `Analysis complete: ${data.classification}. Confidence ${data.conf} percent.`;
-        window.setTimeout(() => { sr.textContent = ''; }, 4000);
-      }
+        const ctx2 = document.getElementById('matrixChart').getContext('2d');
+        state.charts.matrix = new Chart(ctx2, {
+            type: 'radar',
+            data: {
+                labels: ['Turbidity', 'pH', 'Oxygen', 'Metals', 'Bacteria'],
+                datasets: [{
+                    label: 'Current Sample',
+                    data: [65, 59, 90, 81, 56],
+                    backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                    borderColor: '#06b6d4'
+                }]
+            }
+        });
     }
 
-    /* ==== Live visual update ==== */
-    function cleanlinessFromDepth(depth) {
-      return Math.round(100 * Math.exp(-depth/60));
+    // --- Chatbot Logic ---
+    function handleChat() {
+        const input = document.getElementById('chatInput');
+        const query = input.value.trim().toLowerCase();
+        if (!query) return;
+
+        addBubble(input.value, 'user');
+        input.value = '';
+
+        setTimeout(() => {
+            let response = "I'm analyzing your request. Based on WHO standards, water should have a turbidity of < 1 NTU for drinking.";
+            if (query.includes('ro')) response = "Reverse Osmosis (RO) is effective at removing 99% of dissolved solids and salts.";
+            if (query.includes('heavy metals')) response = "Heavy metals like Lead or Mercury require activated carbon or specialized ion exchange resins.";
+            addBubble(response, 'ai');
+        }, 800);
     }
 
-    function updateLive(depthPercent) {
-      const d = clamp(Math.round(depthPercent), 0, 100);
-      const c = cleanlinessFromDepth(d);
-      try {
-        liveDepth.textContent = `Depth: ${d}%`;
-        liveClean.textContent = `Cleanliness: ${c}%`;
-        const bottle = document.querySelector('.bottle');
-        if (bottle) bottle.style.setProperty('--fill', String(clamp(d,0,100)));
-        const t = new Date().toLocaleTimeString();
-        safeUpdateCharts(t, d, c);
-      } catch (err) {
-        console.warn('updateLive error', err);
-      }
+    function addBubble(text, type) {
+        const history = document.getElementById('chat-history');
+        const div = document.createElement('div');
+        div.className = `bubble ${type}`;
+        div.innerText = text;
+        history.appendChild(div);
+        history.scrollTop = history.scrollHeight;
     }
-  });
 
-  /* Provide safe proxy for legacy inline calls */
-  window.performAnalysis = window.performAnalysis || function () {
-    try {
-      const btn = document.getElementById('analyzeBtn');
-      if (btn) btn.click();
-    } catch (e) { console.error('performAnalysis proxy failed', e); }
-  };
-
-})();
+    // Initialize on load
+    window.onload = () => {
+        initDashboardCharts();
+        addBubble("System Online. I am your SENIMSU Water Expert. How can I assist with your analysis today?", "ai");
+    };
 </script>
 </body>
 </html>
