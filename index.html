@@ -1,561 +1,489 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SENIMSU Water AI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
 <style>
-  /* (Your original CSS kept, slightly trimmed for brevity in this block) */
-  body {
-    margin: 0;
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: linear-gradient(135deg, #b3e5fc, #0288d1);
-    min-height: 100vh;
-    overflow: hidden;
+  :root{
+    --bg-1:#b3e5fc;
+    --bg-2:#0288d1;
+    --card-bg:#ffffff;
+    --accent:#0288d1;
+    --muted:#e1f5fe;
+    --danger:#ff9800;
+    --max-bottle-width:220px;
+    --bottle-height:500px;
+    --ui-radius:12px;
   }
-  .bottle-container {
-    position: fixed;
-    width: 300px;
-    height: 600px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    pointer-events: none;
-    animation: float 6s ease-in-out infinite;
-  }
-  @keyframes float {
-    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
-    50% { transform: translate(-50%, -50%) translateY(-20px); }
-  }
-  .bottle {
-    position: absolute;
-    width: 200px;
-    height: 450px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 60px 60px 50px 50px;
-    bottom: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    backdrop-filter: blur(15px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-  }
-  .water {
-    position: absolute;
-    bottom: 0;
-    width: 200px;
-    height: 380px;
-    background: linear-gradient(180deg, #81d4fa, #029be5);
-    border-radius: 60px 60px 50px 50px;
-    animation: wave 7s ease-in-out infinite;
-    overflow: hidden;
-    transition: height 0.6s ease;
-  }
-  @keyframes wave {
-    0%, 100% { height: 380px; transform: translateY(0); }
-    50% { height: 400px; transform: translateY(-10px); }
-  }
-  .bottle::before {
-    content: "";
-    position: absolute;
-    top: -50px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 60px;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 25px 25px 15px 15px;
-  }
-  .eyes { position: absolute; top: 140px; width: 100%; text-align: center; }
-  .eye { display: inline-block; width: 25px; height: 35px; background: #333; border-radius: 50%; margin: 0 35px; animation: blink 5s infinite; }
-  @keyframes blink { 0%,90%,100%{height:35px;} 95%{height:5px;} }
-  .mouth { position: absolute; top: 200px; left: 50%; transform: translateX(-50%); width: 70px; height: 35px; border-bottom: 10px solid #333; border-radius: 50%; animation: smile 4s ease-in-out infinite; }
-  @keyframes smile { 0%,100%{width:70px;} 50%{width:90px;} }
 
-  /* Card and layout (kept as in your file) */
-  .card {
-    background: white;
-    width: 90%;
-    max-width: 900px;
-    height: 90vh;
-    margin: 5vh auto;
-    border-radius: 20px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    z-index: 1;
-    position: relative;
-    overflow: hidden;
+  /* Reduced motion respect */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important}
   }
-  @media (max-width: 480px) {
-    .card { width: 100%; height: 100vh; margin: 0; border-radius: 0; }
+
+  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Arial, sans-serif;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;overflow:hidden}
+
+  /* Layout */
+  .app{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2vh;
+    box-sizing:border-box;
+    gap:20px;
   }
-  .top-nav {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 15px 20px; border-bottom: 1px solid #e1f5fe; display:flex; justify-content:space-between; align-items:center; border-radius:20px 20px 0 0; backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 2;
+
+  /* Card */
+  .card{
+    width:100%;
+    max-width:1000px;
+    height:90vh;
+    background:var(--card-bg);
+    border-radius:20px;
+    box-shadow:0 18px 40px rgba(0,0,0,.25);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    z-index:1;
   }
-  .logo { font-size:28px; font-weight:bold; color:#0277bd; cursor:pointer; transition: color 0.3s; }
-  .logo:hover { color:#01579b; }
-  .nav-links { display:flex; gap:20px; }
-  .nav-link { color:#01579b; font-size:16px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:all 0.3s; position:relative; }
-  .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:100%; height:2px; background:#0288d1; transform:scaleX(0); transition:transform 0.3s; }
-  .nav-link:hover::after { transform:scaleX(1); }
-  .nav-link:hover { background:#e1f5fe; }
-  .nav-link.active { background:#0288d1; color:white; font-weight:bold; }
-  .nav-link.active::after { transform:scaleX(0); }
 
-  .content { flex:1; padding: 20px 30px; overflow-y:auto; scrollbar-width: thin; }
-  .content::-webkit-scrollbar { width: 8px; }
-  .content::-webkit-scrollbar-thumb { background: #0288d1; border-radius: 10px; }
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--muted)}
+  .logo{font-size:1.35rem;font-weight:700;color:#0277bd}
+  .nav{display:flex;gap:8px;align-items:center}
+  .nav button{background:transparent;border:0;padding:8px 12px;border-radius:10px;color:#01579b;cursor:pointer}
+  .nav button[aria-pressed="true"]{background:var(--accent);color:#fff}
 
-  h2 { color:#0277bd; margin-top:0; }
-  p { color:#555; font-size:16px; margin-bottom:25px; }
-  .source-buttons { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin: 15px 0; }
-  .source-btn { padding:14px; background:#e1f5fe; color:#01579b; border:none; border-radius:10px; cursor:pointer; font-size:15px; transition:all 0.3s; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-  .source-btn:hover { background:#b3e5fc; transform:translateY(-3px); box-shadow:0 5px 15px rgba(2,136,209,0.3); }
-  .source-btn.active { background:#0288d1; color:white; box-shadow:0 5px 15px rgba(2,136,209,0.4); transform:translateY(-3px); }
-  input { width:90%; padding:15px; font-size:17px; border-radius:10px; border:2px solid #ccc; margin:15px 0; transition:all 0.3s; }
-  input:focus { border-color:#0288d1; outline:none; box-shadow:0 0 10px rgba(2,136,209,0.2); }
-  button.primary { padding:16px; width:100%; background:#0288d1; color:white; border:none; border-radius:10px; font-size:18px; cursor:pointer; transition:all 0.3s; box-shadow:0 5px 15px rgba(2,136,209,0.3); }
-  button.primary:hover { background:#0277bd; transform:translateY(-2px); box-shadow:0 8px 20px rgba(2,136,209,0.4); }
-  .result { padding:20px; border-radius:12px; background:#e1f5fe; color:#01579b; font-size:16px; line-height:1.7; display:none; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-  #chart-container { margin-top:20px; padding:10px; background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); display:block; }
-  .refilter-section { padding:20px; background:#fff3e0; border-radius:12px; border-left:6px solid #ff9800; margin-top:25px; display:none; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-  .history-list { text-align:left; margin-top:20px; }
-  .history-item { background:#e1f5fe; padding:15px; margin:15px 0; border-radius:12px; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition:transform 0.3s; }
-  .history-item:hover { transform: translateY(-5px); }
-  .clear-history { background:#ff5722; margin-top:20px; box-shadow:0 5px 15px rgba(255,87,34,0.3); }
-  .footer { text-align:center; padding:20px; font-size:12px; color:#777; border-top:1px solid #eee; margin-top:auto; background:white; }
-  .footer a { color:#0288d1; text-decoration:none; margin:0 10px; cursor:pointer; }
-  .footer a:hover { text-decoration:underline; }
-  .section { display:none; }
-  .section.active { display:block; }
-  [data-tooltip] { position: relative; }
-  [data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 5px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-  [data-tooltip]:hover::after { opacity: 1; }
+  .content{display:flex;flex:1;gap:24px;padding:18px;box-sizing:border-box;overflow:hidden}
+  .left, .right{background:transparent}
+  .left{flex:1;min-width:260px;max-width:460px;overflow:auto;padding-right:8px}
+  .right{flex:1.3;height:100%;display:flex;flex-direction:column;align-items:stretch}
 
-  /* new small status bar for live readings */
-  .live-status { display:flex; gap:16px; align-items:center; margin-top:12px; flex-wrap:wrap; }
-  .status-box { background:#eaf7ff; padding:10px 12px; border-radius:9px; box-shadow:0 2px 6px rgba(0,0,0,0.08); color:#01579b; font-weight:600; }
-  @media (max-width: 760px) {
-    .bottle-container { display:none; } /* hide big bottle on small screens to keep layout tidy */
+  .section{display:none}
+  .section[aria-hidden="false"]{display:block}
+
+  .source-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:10px;
+    margin:12px 0 6px;
+  }
+  .source-btn{
+    padding:12px;border-radius:10px;border:0;background:var(--muted);cursor:pointer;font-weight:600;color:#01579b;
+  }
+  .source-btn[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+  label{display:block;font-weight:600;margin-top:12px}
+  input[type="number"]{
+    width:100%;
+    padding:12px;border-radius:10px;border:2px solid #ddd;font-size:1rem;margin-top:8px;box-sizing:border-box;
+  }
+  .primary{
+    margin-top:12px;padding:12px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer;width:100%;
+  }
+
+  .output, .advice{margin-top:12px;padding:14px;border-radius:10px;background:var(--muted);display:none}
+  .output[aria-hidden="false"], .advice[aria-hidden="false"]{display:block}
+
+  .status{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .status .chip{background:#eaf7ff;padding:8px;border-radius:8px;min-width:110px;text-align:center}
+
+  /* Bottle (visual) placed on the right column header */
+  .bottle-wrap{display:flex;align-items:center;justify-content:center;padding:10px 10px 0}
+  .bottle-container{
+    width:var(--max-bottle-width);
+    height:var(--bottle-height);
+    position:relative;
+    pointer-events:none;
+    transform-origin:center;
+    --float:0;
+    animation:float 6s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+  }
+  .bottle{
+    width:70%;
+    height:82%;
+    max-width:200px;
+    background:rgba(255,255,255,.18);
+    border-radius:56px;
+    margin:0 auto;
+    position:relative;
+    box-shadow:inset 0 -6px 14px rgba(0,0,0,.06);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    align-items:center;
+  }
+
+  /* water fill uses CSS variable --fill (0..100) */
+  .bottle .water{
+    position:absolute;left:0;right:0;bottom:0;
+    height:calc(var(--fill,20) * 1%); /* scaled by container */
+    background:linear-gradient(180deg,#81d4fa,#0288d1);
+    border-radius:inherit;
+    transition:height:400ms ease;
+    transition:height .45s cubic-bezier(.2,.8,.2,1);
+    will-change:height;
+  }
+
+  .eyes{position:relative;z-index:2;margin-top:72px;display:flex;gap:20px}
+  .eye{width:24px;height:28px;background:#2b2b2b;border-radius:50%}
+  .mouth{width:64px;height:30px;border-bottom:8px solid #333;border-radius:50%;margin-top:8px}
+
+  /* Charts */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;align-items:start}
+  canvas{width:100%!important;height:180px!important}
+
+  /* Profile */
+  .profile p{line-height:1.6;color:#223}
+
+  /* Responsive */
+  @media (max-width:920px){
+    .content{flex-direction:column}
+    .left{max-width:none}
+    .charts{grid-template-columns:1fr}
+    .bottle-container{display:none}
   }
 </style>
 </head>
 <body>
 
-<div class="bottle-container" aria-hidden="true">
-  <div class="bottle">
-    <div class="water" id="bottleWater" style="height:120px;"></div>
-    <div class="eyes">
-      <div class="eye"></div>
-      <div class="eye"></div>
-    </div>
-    <div class="mouth"></div>
-  </div>
-</div>
+<div class="app" role="application">
+  <div class="card" aria-labelledby="appTitle">
+    <header class="top-nav">
+      <div id="appTitle" class="logo">SENIMSU</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button type="button" data-target="analyze" aria-pressed="true">Analyze</button>
+        <button type="button" data-target="profile" aria-pressed="false">Profile</button>
+      </nav>
+    </header>
 
-<div class="card">
-  <div class="top-nav">
-    <div class="logo" onclick="showSection('analyze')">SENIMSU</div>
-    <div class="nav-links">
-      <div class="nav-link active" onclick="showSection('analyze')">Analyze</div>
-      <div class="nav-link" onclick="showSection('profile')" id="profileLink">Profile</div>
-      <div class="nav-link" onclick="showSection('auth')" id="authLink">Login</div>
-      <div class="nav-link" onclick="logout()" id="logoutLink" style="display:none;">Logout</div>
-    </div>
-  </div>
+    <main class="content">
+      <section class="left">
+        <div id="analyze" class="section" aria-hidden="false">
+          <h2>AI Water Quality Analyzer</h2>
 
-  <div class="content">
-    <div id="analyze" class="section active">
-      <p style="margin-top:0;">AI-Assisted Water Quality Analyzer <span data-tooltip="Enter turbidity and select source for simulation">ℹ️</span></p>
+          <p class="sr-only" id="sourceDesc">Choose water source type</p>
+          <div class="source-grid" role="radiogroup" aria-labelledby="sourceDesc">
+            <button class="source-btn" type="button" data-source="clean_snow" aria-pressed="false">Clean Snow</button>
+            <button class="source-btn" type="button" data-source="urban_snow" aria-pressed="false">Urban Snow</button>
+            <button class="source-btn" type="button" data-source="ice" aria-pressed="false">Ice</button>
+            <button class="source-btn" type="button" data-source="sleet" aria-pressed="false">Sleet</button>
+          </div>
 
-      <div class="source-buttons">
-        <button class="source-btn" onclick="selectSource('clean_snow', this)" data-tooltip="Low turbidity, high removal">Clean Snow<br><small>(Very low contaminants)</small></button>
-        <button class="source-btn" onclick="selectSource('urban_snow', this)" data-tooltip="High pollutants, lower removal">Urban Snow<br><small>(High pollutants)</small></button>
-        <button class="source-btn" onclick="selectSource('ice', this)" data-tooltip="Mineral-rich, good removal">Ice<br><small>(Mineral-rich)</small></button>
-        <button class="source-btn" onclick="selectSource('sleet', this)" data-tooltip="Mixed, medium removal">Sleet<br><small>(Mixed precipitation)</small></button>
-      </div>
+          <p>Selected: <strong id="selected">None</strong></p>
 
-      <p><strong>Selected source:</strong> <span id="selected">None yet</span></p>
+          <label for="before">Enter turbidity (NTU)</label>
+          <input id="before" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 85.4" aria-describedby="beforeHelp">
+          <div id="beforeHelp" style="display:none">Turbidity in Nephelometric Turbidity Units (NTU)</div>
 
-      <input type="number" min="0" id="before" placeholder="Enter measured turbidity (NTU)" data-tooltip="NTU value before filtration">
+          <button class="primary" id="analyzeBtn" type="button">Analyze</button>
 
-      <button class="primary" onclick="analyze()">Analyze with Biochar Filter</button>
+          <aside id="output" class="output" role="status" aria-live="polite" aria-hidden="true"></aside>
 
-      <div id="output" class="result"></div>
+          <div id="advice" class="advice" aria-hidden="true"></div>
 
-      <!-- NEW: Live status + charts -->
-      <div style="margin-top:18px;">
-        <div class="live-status">
-          <div class="status-box" id="liveDepth">Depth: --%</div>
-          <div class="status-box" id="liveClean">Cleanliness: --%</div>
-          <div class="status-box" id="liveTime">Last update: --</div>
+          <div class="status" aria-hidden="false">
+            <div id="liveDepth" class="chip">Depth: --%</div>
+            <div id="liveClean" class="chip">Cleanliness: --%</div>
+          </div>
+
         </div>
 
-        <div id="chart-container">
-          <canvas id="depthChart" style="max-height:220px;"></canvas>
-          <canvas id="cleanChart" style="max-height:220px; margin-top:16px;"></canvas>
+        <div id="profile" class="section" aria-hidden="true">
+          <h2>About Project</h2>
+          <div class="profile">
+            <p>
+              SENIMSU Water AI simulates biochar filtration using a lightweight knowledge-based model.
+              It estimates turbidity reduction, contamination risk, and purification confidence.
+              This demo focuses on explainability and quick offline estimates and is not a substitute for laboratory testing.
+            </p>
+            <p><strong>How it works</strong>: Select source, enter turbidity, and the model returns estimated after-filtration turbidity, efficiency and likely contaminants.</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="right" aria-hidden="false">
+        <div class="bottle-wrap" aria-hidden="true">
+          <div class="bottle-container" id="bottleContainer" aria-hidden="true">
+            <div class="bottle" role="img" aria-label="Water bottle visualization" style="--fill:20">
+              <div class="water" id="bottleWater" aria-hidden="true"></div>
+              <div class="eyes" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
+              <div class="mouth" aria-hidden="true"></div>
+            </div>
+          </div>
         </div>
 
-        <div id="refilter" class="refilter-section">🔄 Re-filtration Recommended</div>
-      </div>
-    </div>
+        <div style="padding:12px;flex:1;display:flex;flex-direction:column;">
+          <div class="charts" aria-hidden="false">
+            <canvas id="depthChart" aria-label="Depth over time"></canvas>
+            <canvas id="cleanChart" aria-label="Cleanliness over time"></canvas>
+          </div>
 
-    <div id="profile" class="section">
-      <h2>Your Profile</h2>
-      <p>Welcome, <strong id="usernameDisplay">Guest</strong>!</p>
-      <h3>Past Analyses</h3>
-      <div id="history" class="history-list">
-        <p>No analyses yet. Start analyzing water!</p>
-      </div>
-      <button class="primary clear-history" onclick="clearHistory()" id="clearBtn" style="display:none;">Clear History</button>
-    </div>
-
-    <div id="auth" class="section">
-      <div id="loginForm" class="auth-form">
-        <h2>Login</h2>
-        <input type="text" id="loginUser" placeholder="Username">
-        <input type="password" id="loginPass" placeholder="Password">
-        <button class="primary" onclick="login()">Login</button>
-        <p style="margin-top:15px;">No account? <a href="#" onclick="showSignup()">Sign Up</a></p>
-      </div>
-
-      <div id="signupForm" class="auth-form" style="display:none;">
-        <h2>Sign Up</h2>
-        <input type="text" id="signupUser" placeholder="Username">
-        <input type="password" id="signupPass" placeholder="Password">
-        <button class="primary" onclick="signup()">Create Account</button>
-        <p style="margin-top:15px;">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
-      </div>
-    </div>
-
-    <div id="about" class="section">
-      <h2>About SENIMSU</h2>
-      <p>SENIMSU Water AI is an innovative tool designed to simulate water quality analysis using biochar filtration. It helps users estimate turbidity reduction for various winter water sources like snow, ice, and sleet. Built with cutting-edge AI, it provides quick insights for safe water consumption in harsh environments. Our mission is to make water purification accessible and educational for everyone.</p>
-      <p>Developed in 2026, SENIMSU combines scientific research on biochar efficiency with user-friendly design to promote sustainable water practices.</p>
-    </div>
-
-    <div id="privacy" class="section">
-      <h2>Privacy Policy</h2>
-      <p>At SENIMSU Water AI, we value your privacy. We collect minimal data, such as usernames and analysis history, stored locally in your browser via localStorage. No personal information is shared with third parties. We do not track your usage or sell data. By using this site, you agree to our terms. For questions, contact us.</p>
-      <p>This policy was last updated on January 03, 2026.</p>
-    </div>
-
-    <div id="contact" class="section">
-      <h2>Contact Us</h2>
-      <p>If you have questions, feedback, or need support, reach out via:</p>
-      <p><strong>Email:</strong> shyn.aityk@gmail.com</p>
-      <p><strong>Phone:</strong> +77753648452</p>
-      <p>We aim to respond within 24-48 hours.</p>
-    </div>
-  </div>
-
-  <div class="footer">
-    Simulation based on scientific studies of biochar filtration efficiency.<br>
-    Different water sources have different contaminant types → different removal rates.<br>
-    Cute open bottle character by SENIMSU Water AI 🌊<br>
-    <a onclick="showSection('about')">About</a> | <a onclick="showSection('privacy')">Privacy</a> | <a onclick="showSection('contact')">Contact</a>
+          <div style="margin-top:auto;font-size:.9rem;color:#324;padding-top:12px">
+            <p style="margin:0"><em>Tip:</em> If results indicate unsafe water, perform additional filtration and lab testing before drinking.</p>
+          </div>
+        </div>
+      </aside>
+    </main>
   </div>
 </div>
 
 <script>
-/* ====== existing app logic (auth, analyze, history) - preserved from your file ====== */
-let currentSource = '';
-let currentUser = null;
-let history = [];
-let depthChart, cleanChart;
-const MAX_POINTS = 60; // keep last 60 readings
+/* ===================== Constants & Knowledge Base ===================== */
+const AI_KNOWLEDGE = {
+  clean_snow: { base: 0.97, risk: 0.02, cont: ["Dust","Organic particles"] },
+  urban_snow: { base: 0.80, risk: 0.15, cont: ["Heavy metals","Oil","Salt"] },
+  ice: { base: 0.92, risk: 0.05, cont: ["Minerals","Sediments"] },
+  sleet: { base: 0.87, risk: 0.07, cont: ["Mixed solids","Microplastics"] }
+};
 
-function loadData() {
-  const savedUser = localStorage.getItem('senimsuUser');
-  if (savedUser) {
-    currentUser = savedUser;
-    updateUI();
-  }
-  const savedHistory = localStorage.getItem('senimsuHistory');
-  if (savedHistory) {
-    history = JSON.parse(savedHistory);
-    if (currentUser) renderHistory();
-  }
-}
-loadData();
+const SAFE_TURBIDITY = 100;
+const MAX_SERIES = 40;
 
-function updateUI() {
-  document.getElementById('usernameDisplay').textContent = currentUser || 'Guest';
-  if (currentUser) {
-    document.getElementById('logoutLink').style.display = 'block';
-    document.getElementById('authLink').style.display = 'none';
-    document.getElementById('profileLink').style.display = 'block';
-  } else {
-    document.getElementById('logoutLink').style.display = 'none';
-    document.getElementById('authLink').style.display = 'block';
-    document.getElementById('authLink').textContent = 'Login';
-    document.getElementById('profileLink').style.display = 'none';
-  }
-}
+/* Small utilities */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const round = (v, dp = 0) => {
+  const f = Math.pow(10, dp);
+  return Math.round(v * f) / f;
+};
 
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(l => l.getAttribute('onclick') === `showSection('${id}')`);
-  if (activeLink) activeLink.classList.add('active');
-  if (id === 'auth' && currentUser) showSection('analyze');
-}
-
-function showLogin() {
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('signupForm').style.display = 'none';
-}
-function showSignup() {
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'block';
-}
-function signup() {
-  const user = document.getElementById('signupUser').value.trim();
-  const pass = document.getElementById('signupPass').value;
-  if (!user || !pass) return alert('Please fill all fields');
-  if (localStorage.getItem('senimsu_' + user)) return alert('Username already taken');
-  localStorage.setItem('senimsu_' + user, pass);
-  alert('Account created! Now login.');
-  showLogin();
-}
-function login() {
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  if (!user || !pass) return alert('Please fill all fields');
-  const savedPass = localStorage.getItem('senimsu_' + user);
-  if (savedPass && savedPass === pass) {
-    currentUser = user;
-    localStorage.setItem('senimsuUser', user);
-    updateUI();
-    showSection('analyze');
-    alert('Welcome back, ' + user + '!');
-  } else {
-    alert('Incorrect username or password');
-  }
-}
-function logout() {
-  if (confirm('Logout?')) {
-    currentUser = null;
-    localStorage.removeItem('senimsuUser');
-    updateUI();
-    showSection('analyze');
-  }
-}
-
-function selectSource(source, button) {
-  document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
-  button.classList.add('active');
-  const names = { clean_snow: "Clean Snow", urban_snow: "Urban Snow", ice: "Ice", sleet: "Sleet" };
-  document.getElementById('selected').textContent = names[source];
-  currentSource = source;
-  document.getElementById('before').focus();
-}
-
-function analyze() {
-  if (!currentSource) return alert("Please select a water source first!");
-  let before = parseFloat(document.getElementById("before").value);
-  if (isNaN(before) || before < 0) return alert("Please enter a valid positive turbidity value (NTU).");
-  let removalRate, explanation = "";
-  switch (currentSource) {
-    case 'clean_snow':
-      removalRate = before <= 20 ? 98 : before <= 100 ? 95 : 92;
-      explanation = "Clean snow has mostly fine suspended particles — biochar removes 92-98% efficiently.";
-      break;
-    case 'urban_snow':
-      removalRate = before <= 200 ? 82 : before <= 500 ? 78 : 72;
-      explanation = "Urban snow contains heavy metals, oils, and road salt — lower efficiency (72-82%).";
-      break;
-    case 'ice':
-      removalRate = before <= 30 ? 94 : before <= 150 ? 90 : 85;
-      explanation = "Ice often has mineral particles — biochar achieves 85-94% reduction.";
-      break;
-    case 'sleet':
-      removalRate = before <= 80 ? 90 : before <= 200 ? 85 : 80;
-      explanation = "Sleet carries mixed contaminants — 80-90% removal.";
-      break;
-  }
-  let after = Math.round(before * (1 - removalRate / 100));
-  let status = after <= 100 ? "Clean & Safe" : "Still Cloudy";
-  let action = after <= 100 ? "Ready to boil and drink! ✅" : "Re-filter recommended";
-  const resultHTML = `
-    <strong>Source:</strong> ${document.getElementById('selected').textContent}<br>
-    <strong>Initial turbidity:</strong> ${before} NTU<br>
-    <strong>Predicted after filtration:</strong> ${after} NTU<br>
-    <strong>Removal efficiency:</strong> ${removalRate}%<br><br>
-    <em>${explanation}</em><br><br>
-    <strong>Status:</strong> ${status}<br>
-    <strong>Next step:</strong> ${action}
-  `;
-  document.getElementById("output").style.display = "block";
-  document.getElementById("output").innerHTML = resultHTML;
-  document.getElementById("refilter").style.display = after > 100 ? "block" : "none";
-  if (currentUser) {
-    const entry = { date: new Date().toLocaleString(), source: document.getElementById('selected').textContent, initial: before, predicted: after, removal: removalRate };
-    history.unshift(entry);
-    localStorage.setItem('senimsuHistory', JSON.stringify(history));
-    renderHistory();
-  }
-}
-
-function renderHistory() {
-  const container = document.getElementById('history');
-  if (history.length === 0) {
-    container.innerHTML = '<p>No analyses yet. Start analyzing water!</p>';
-    document.getElementById('clearBtn').style.display = 'none';
-    return;
-  }
-  container.innerHTML = '';
-  history.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'history-item';
-    div.innerHTML = `<strong>${item.date}</strong><br>Source: ${item.source}<br>Initial: ${item.initial} NTU → Predicted: ${item.predicted} NTU (${item.removal}% removal)`;
-    container.appendChild(div);
-  });
-  document.getElementById('clearBtn').style.display = 'block';
-}
-function clearHistory() {
-  if (confirm('Clear all past analyses?')) {
-    history = [];
-    localStorage.removeItem('senimsuHistory');
-    renderHistory();
-  }
-}
-
-/* ====== NEW: Live data fetching, charts, and cleanliness estimation ====== */
-
-// Helper: estimate cleanliness from depth.
-// For now we use a simple inverse mapping: deeper water (higher %) -> lower cleanliness.
-// You can replace this with your backend's turbidity/cleanliness endpoint later.
-function estimateCleanliness(depthPercent) {
-  // depthPercent in 0..100
-  // simple mapping: cleanliness = 100 - depth, but we smooth it a bit and clamp
-  let clean = 100 - depthPercent;
-  // apply a small smoothing curve so mid-depths still show moderate cleanliness
-  clean = Math.round(Math.max(0, Math.min(100, clean)));
-  return clean;
-}
-
-const DEPTH_API = "http://localhost:5000/api/depth"; // python server endpoint
-let depthHistory = [];
-let cleanHistory = [];
-let timeLabels = [];
-
-function setupCharts() {
-  const dctx = document.getElementById('depthChart').getContext('2d');
-  const cctx = document.getElementById('cleanChart').getContext('2d');
-
-  depthChart = new Chart(dctx, {
-    type: 'line',
-    data: {
-      labels: timeLabels,
-      datasets: [{
-        label: 'Depth (%)',
-        data: depthHistory,
-        fill: true,
-        tension: 0.25,
-        borderWidth: 2,
-        pointRadius: 2,
-        backgroundColor: 'rgba(2,136,209,0.15)',
-        borderColor: '#0288d1'
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true, max: 100 } },
-      plugins: { legend: { display: true } }
-    }
-  });
-
-  cleanChart = new Chart(cctx, {
-    type: 'line',
-    data: {
-      labels: timeLabels,
-      datasets: [{
-        label: 'Cleanliness (%)',
-        data: cleanHistory,
-        fill: true,
-        tension: 0.25,
-        borderWidth: 2,
-        pointRadius: 2,
-        backgroundColor: 'rgba(129,212,250,0.15)',
-        borderColor: '#81d4fa'
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true, max: 100 } },
-      plugins: { legend: { display: true } }
-    }
-  });
-}
-
-// Push new reading into arrays, keep max length
-function pushReading(depth) {
-  const now = new Date();
-  const timeLabel = now.toLocaleTimeString();
-
-  if (timeLabels.length >= MAX_POINTS) {
-    timeLabels.shift();
-    depthHistory.shift();
-    cleanHistory.shift();
-  }
-  timeLabels.push(timeLabel);
-  depthHistory.push(depth);
-
-  const clean = estimateCleanliness(depth);
-  cleanHistory.push(clean);
-
-  // update small status boxes
-  document.getElementById('liveDepth').textContent = `Depth: ${depth}%`;
-  document.getElementById('liveClean').textContent = `Cleanliness: ${clean}%`;
-  document.getElementById('liveTime').textContent = `Last update: ${timeLabel}`;
-
-  // animate big bottle (if visible)
-  const bottle = document.getElementById('bottleWater');
-  if (bottle) {
-    // bottle max inner height is ~380 (matching earlier CSS). We map percent to this height.
-    const maxH = 380;
-    bottle.style.height = `${(depth / 100) * maxH}px`;
+/* ===================== Model (refactored & documented) ===================== */
+/*
+  aiPredict(beforeNTU, sourceKey)
+  - beforeNTU: number (>=0)
+  - sourceKey: one of keys in AI_KNOWLEDGE
+  returns: { after, eff, conf, cont }
+*/
+function aiPredict(before, source) {
+  if (!AI_KNOWLEDGE[source] || typeof before !== 'number' || before < 0) {
+    throw new Error('Invalid prediction inputs');
   }
 
-  // update charts
-  if (depthChart) depthChart.update();
-  if (cleanChart) cleanChart.update();
+  const k = AI_KNOWLEDGE[source];
+
+  // penalty increases with higher turbidity (heuristic)
+  let penalty = 0;
+  if (before > 300) penalty = 0.15;
+  else if (before > 150) penalty = 0.10;
+  else if (before > 50) penalty = 0.05;
+
+  // effective efficiency after accounting for risk & penalty
+  let efficiency = k.base - penalty - k.risk;
+
+  // keep results in reasonable bounds
+  efficiency = clamp(efficiency, 0.55, 0.99);
+
+  const after = Math.max(0, Math.round(before * (1 - efficiency)));
+  const effPct = Math.round(efficiency * 100);
+  const confPct = Math.round(clamp((1 - penalty - k.risk) * 100, 10, 99));
+
+  return { after, eff: effPct, conf: confPct, cont: k.cont.slice() };
 }
 
-// Fetch depth from server
-async function fetchDepthOnce() {
-  try {
-    const res = await fetch(DEPTH_API);
-    if (!res.ok) throw new Error("Network response not ok");
-    const data = await res.json();
-    // server returns {"depth": number}
-    const depth = Math.round(Number(data.depth));
-    if (!Number.isNaN(depth)) pushReading(Math.max(0, Math.min(100, depth)));
-  } catch (err) {
-    console.error("Fetch depth error:", err);
-  }
-}
+/* ===================== UI & DOM helpers ===================== */
 
-// Start polling server every N milliseconds
-let pollingInterval = 2000;
-function startPolling() {
-  fetchDepthOnce(); // immediate
-  return setInterval(fetchDepthOnce, pollingInterval);
-}
-
-/* initialize charts and start polling after DOM loads */
 document.addEventListener('DOMContentLoaded', () => {
-  setupCharts();
-  startPolling();
+  // Elements
+  const sourceButtons = Array.from(document.querySelectorAll('.source-btn'));
+  const selectedEl = document.getElementById('selected');
+  const beforeInput = document.getElementById('before');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const output = document.getElementById('output');
+  const advice = document.getElementById('advice');
+  const liveDepth = document.getElementById('liveDepth');
+  const liveClean = document.getElementById('liveClean');
+  const bottle = document.getElementById('bottleContainer');
+  const bottleWater = document.getElementById('bottleWater');
+
+  let currentSource = null;
+
+  /* Navigation (no inline onclicks) */
+  Array.from(document.querySelectorAll('.nav button')).forEach(btn => {
+    btn.addEventListener('click', () => {
+      // toggle nav buttons
+      document.querySelectorAll('.nav button').forEach(b => {
+        const target = b.dataset.target;
+        const pressed = (b === btn).toString();
+        b.setAttribute('aria-pressed', pressed);
+        const sec = document.getElementById(target);
+        sec.setAttribute('aria-hidden', (b !== btn).toString());
+      });
+    });
+  });
+
+  /* Source selection behavior - acts like radio buttons */
+  sourceButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      sourceButtons.forEach(b => b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      currentSource = btn.dataset.source;
+      selectedEl.textContent = btn.textContent;
+    });
+  });
+
+  /* Analyze click */
+  analyzeBtn.addEventListener('click', () => {
+    performAnalysis();
+  });
+
+  /* Keyboard: allow Enter on input to analyze */
+  beforeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      analyzeBtn.click();
+    }
+  });
+
+  /* Create charts with better defaults and colors */
+  const depthCtx = document.getElementById('depthChart').getContext('2d');
+  const cleanCtx = document.getElementById('cleanChart').getContext('2d');
+
+  const defaultOpts = {
+    maintainAspectRatio: false,
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false } },
+    scales: { x: { display: false }, y: { beginAtZero: true, max: 100 } }
+  };
+
+  const depthChart = new Chart(depthCtx, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Depth %', data: [], fill: true, backgroundColor: 'rgba(2,136,209,0.15)', borderColor: 'rgba(2,136,209,0.95)', tension: 0.25 }]},
+    options: defaultOpts
+  });
+
+  const cleanChart = new Chart(cleanCtx, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Cleanliness %', data: [], fill: true, backgroundColor: 'rgba(129,212,250,0.16)', borderColor: 'rgba(3,169,244,0.9)', tension: 0.25 }]},
+    options: defaultOpts
+  });
+
+  /* Live time series arrays */
+  const labels = [];
+  const depthSeries = [];
+  const cleanSeries = [];
+
+  const MAX_POINTS = MAX_SERIES;
+
+  function pushSeries(timeLabel, depthVal, cleanVal) {
+    if (labels.length >= MAX_POINTS) {
+      labels.shift(); depthSeries.shift(); cleanSeries.shift();
+    }
+    labels.push(timeLabel);
+    depthSeries.push(depthVal);
+    cleanSeries.push(cleanVal);
+
+    depthChart.data.labels = labels.slice();
+    depthChart.data.datasets[0].data = depthSeries.slice();
+    depthChart.update('none');
+
+    cleanChart.data.labels = labels.slice();
+    cleanChart.data.datasets[0].data = cleanSeries.slice();
+    cleanChart.update('none');
+  }
+
+  function cleanlinessFromDepth(depth){
+    // smoother mapping; depth in percent (0..100)
+    return Math.round(100 * Math.exp(-depth/60));
+  }
+
+  /* Update the bottle and live labels */
+  function updateLive(depthPercent) {
+    const d = clamp(Math.round(depthPercent), 0, 100);
+    const c = cleanlinessFromDepth(d);
+    liveDepth.textContent = `Depth: ${d}%`;
+    liveClean.textContent = `Cleanliness: ${c}%`;
+    // set CSS variable for fill so layout is responsive
+    const bottleEl = document.querySelector('.bottle');
+    if (bottleEl) bottleEl.style.setProperty('--fill', String(clamp(d,0,100)));
+    const t = new Date().toLocaleTimeString();
+    pushSeries(t, d, c);
+  }
+
+  /* Safe DOM update helper to avoid innerHTML when possible */
+  function renderOutput({before, after, eff, conf, cont, safe}) {
+    // build content using elements for safety / readability
+    output.innerHTML = ''; // small controlled clearing
+    const wrap = document.createElement('div');
+
+    const list = document.createElement('dl');
+    list.style.margin = 0;
+
+    const mk = (k, v) => {
+      const dt = document.createElement('dt'); dt.style.fontWeight = '700'; dt.style.display='inline';
+      dt.textContent = k + ' ';
+      const dd = document.createElement('dd'); dd.style.display='inline'; dd.style.margin = '0 0 8px 6px';
+      dd.textContent = v;
+      list.appendChild(dt);
+      list.appendChild(dd);
+    };
+
+    mk('Initial:', `${before} NTU`);
+    mk('After filtration:', `${after} NTU`);
+    mk('Efficiency:', `${eff}%`);
+    mk('AI confidence:', `${conf}%`);
+    mk('Detected contaminants:', cont.join(', '));
+    mk('Status:', safe ? 'Safe after boiling' : 'Needs re-filtration');
+
+    wrap.appendChild(list);
+
+    output.appendChild(wrap);
+    output.setAttribute('aria-hidden','false');
+
+    // Advice / re-filter note
+    if (!safe || conf < 70) {
+      advice.textContent = '⚠️ AI suggests additional filtration or lab testing';
+      advice.style.borderLeft = `6px solid ${getComputedStyle(document.documentElement).getPropertyValue('--danger') || '#ff9800'}`;
+      advice.setAttribute('aria-hidden','false');
+    } else {
+      advice.setAttribute('aria-hidden','true');
+    }
+  }
+
+  /* Primary action */
+  function performAnalysis(){
+    if (!currentSource) {
+      alert('Please select a water source first.');
+      return;
+    }
+
+    const beforeVal = Number(beforeInput.value);
+    if (!Number.isFinite(beforeVal) || beforeVal < 0) {
+      alert('Please enter a valid non-negative turbidity value (NTU).');
+      return;
+    }
+
+    try {
+      const r = aiPredict(beforeVal, currentSource);
+      const safe = r.after <= SAFE_TURBIDITY;
+      renderOutput({ before: beforeVal, after: r.after, eff: r.eff, conf: r.conf, cont: r.cont, safe });
+
+      // Update live visualization; map turbidity -> depth percent roughly
+      // Use a gentle mapping so typical turbidity values don't overflow the visual
+      const depthPercent = clamp((beforeVal / 5), 0, 100); // same heuristic as original but clamped
+      updateLive(depthPercent);
+
+    } catch (err) {
+      console.error(err);
+      alert('Unexpected error while analyzing. See console for details.');
+    }
+  }
+
+  // Initialize small demo datapoints so charts aren't empty
+  updateLive(12);
+  updateLive(18);
+  updateLive(22);
 });
-
-/* ====== end live data code ====== */
 </script>
-
 </body>
 </html>
